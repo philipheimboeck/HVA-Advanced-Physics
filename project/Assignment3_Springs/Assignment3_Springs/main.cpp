@@ -1,5 +1,7 @@
 #include <cyclone\core.h>
 #include <gl\glut.h>
+#include <cyclone\pworld.h>
+#include <cyclone\pfgen.h>
 
 #include "glutBasic.h"
 
@@ -9,9 +11,22 @@
 void display();
 void update();
 
+cyclone::ParticleAnchoredSpring spring1;
+cyclone::ParticleAnchoredSpring spring2;
+cyclone::Vector3 anchorPoint1;
+cyclone::Vector3 anchorPoint2;
+cyclone::Particle particle1;
+cyclone::Particle particle2;
+cyclone::ParticleWorld world = cyclone::ParticleWorld(10);
+
+void initialize(void);
+
 int main(int argc, char** argv) {
 	// Init glut
 	glutInit(&argc, argv);
+
+	// Init application physics
+	initialize();
 
 	// Create a window
 	createWindow("Springs", WIDTH, HEIGHT);
@@ -20,6 +35,7 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);	// The display callback is executed whenever GLUT
 								// determines that the window should be refreshed
 	glutIdleFunc(update);		// No event
+
 
 	// Run the application
 	// The main loop does the following things:
@@ -42,21 +58,9 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glColor3f(1, 1, 1);
-	glBegin(GL_LINES);	// Delimit the vertices of a primitive or a group of like primitives
-	glVertex3i(1, 1, 0);	// Specify x, y, z, and w coordinates of a vertex. Not all parameters are present in all forms of the command.
-    glVertex3i(WIDTH - 1, HEIGHT - 1, 0);
-    glEnd();
-
-	glBegin(GL_TRIANGLES);
-	glColor3f(1,1,1);
-	glVertex3f(-1,-1,0);
-	glVertex3f(1,-1,0);
-	glVertex3f(1,1,0);
-	glEnd();
-
-	glColor3f(.3, 0, 0);
-	glRectf(-.5, -.5, .5, .5);
+	glColor3f(1, 0, 0);
+	glRectf(particle1.getPosition().x - 5, particle1.getPosition().y - 5, particle1.getPosition().x + 5, particle1.getPosition().y + 5);
+	glRectf(particle2.getPosition().x - 5, particle2.getPosition().y - 5, particle2.getPosition().x + 5, particle2.getPosition().y + 5);
 
 	// Update the displayed content.
     glFlush();
@@ -68,5 +72,34 @@ void display() {
  * the application.
  */
 void update() {
+	// Clear accumulators
+	world.startFrame();
+
+	spring1.updateForce(&particle1, 0.05f);
+	spring2.updateForce(&particle2, 0.05f);
+	world.runPhysics(0.05f);
+
 	glutPostRedisplay(); // Set a flag, so that the display function will be called again
+}
+
+void initialize(void) {
+	// Initialize objects
+	anchorPoint1 = cyclone::Vector3(WIDTH/3, HEIGHT/2, 0);
+	anchorPoint2 = cyclone::Vector3(WIDTH/3*2, HEIGHT/2, 0);
+	spring1 = cyclone::ParticleAnchoredSpring(&anchorPoint1, 1, 10);
+	spring2 = cyclone::ParticleAnchoredSpring(&anchorPoint2, .5, 10);
+	particle1 = cyclone::Particle();
+	particle2 = cyclone::Particle();
+	
+	// Set the acceleration, so that the particles will fall down
+	particle1.setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
+	particle2.setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
+
+	// Set the positions
+	particle1.setPosition(WIDTH/3, HEIGHT/2, 0);
+	particle2.setPosition(WIDTH/3*2, HEIGHT/2, 0);
+
+	// Set the mass
+	particle1.setMass(1);
+	particle2.setMass(1);
 }
