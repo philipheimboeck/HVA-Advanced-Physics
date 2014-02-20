@@ -7,6 +7,7 @@
 
 #define WIDTH	640
 #define HEIGHT	320
+#define DEPTH   300
 
 void display();
 void update();
@@ -20,6 +21,7 @@ cyclone::Particle particle2;
 cyclone::ParticleWorld world = cyclone::ParticleWorld(10);
 
 void initialize(void);
+void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out);
 
 int main(int argc, char** argv) {
 	// Init glut
@@ -59,8 +61,11 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1, 0, 0);
-	glRectf(particle1.getPosition().x - 5, particle1.getPosition().y - 5, particle1.getPosition().x + 5, particle1.getPosition().y + 5);
-	glRectf(particle2.getPosition().x - 5, particle2.getPosition().y - 5, particle2.getPosition().x + 5, particle2.getPosition().y + 5);
+	cyclone::Vector3 pos1;
+	normalize(particle1.getPosition(),pos1);
+	glRectf(-pos1.x-0.03, pos1.y + 0.03, pos1.x + 0.03, pos1.y - 0.3);
+	//glRectf(particle2.getPosition().x - 5, particle2.getPosition().y - 5, particle2.getPosition().x + 5, particle2.getPosition().y + 5);
+	//glRectf(-0.75f,0.75f, 0.75f, -0.75f);
 
 	// Update the displayed content.
     glFlush();
@@ -102,4 +107,14 @@ void initialize(void) {
 	// Set the mass
 	particle1.setMass(1);
 	particle2.setMass(1);
+}
+
+
+/*
+ * Normalize physic position to viewpoint
+ */
+void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) {
+	out.x = position.x/WIDTH;
+	out.y = position.y/HEIGHT;
+	out.z = position.z/DEPTH;
 }
