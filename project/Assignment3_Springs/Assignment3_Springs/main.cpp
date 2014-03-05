@@ -2,22 +2,24 @@
 #include <gl\glut.h>
 #include <cyclone\pworld.h>
 #include <cyclone\pfgen.h>
+#include <iostream>
 
 #include "glutBasic.h"
 
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300
+#define PARTICLESIZE 0.03
 
 void display();
 void update();
 
-cyclone::ParticleAnchoredSpring spring1;
-cyclone::ParticleAnchoredSpring spring2;
-cyclone::Vector3 anchorPoint1;
-cyclone::Vector3 anchorPoint2;
-cyclone::Particle particle1;
-cyclone::Particle particle2;
+cyclone::ParticleAnchoredSpring* spring1;
+cyclone::ParticleAnchoredSpring* spring2;
+cyclone::Vector3* anchorPoint1;
+cyclone::Vector3* anchorPoint2;
+cyclone::Particle* particle1;
+cyclone::Particle* particle2;
 cyclone::ParticleWorld world = cyclone::ParticleWorld(10);
 
 void initialize(void);
@@ -47,6 +49,12 @@ int main(int argc, char** argv) {
 	// * if no callback is defined for the event, the event is ignored
 	glutMainLoop();
 
+	delete spring1;
+	delete spring2;
+	delete particle1;
+	delete particle2;
+	delete anchorPoint1;
+	delete anchorPoint2;
 	// Close the application
 	return 0;
 }
@@ -60,12 +68,27 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	// Get Positions of the objects
+	cyclone::Vector3 pos1, pos2, pos3, pos4;
+	normalize(particle1->getPosition(), pos1);
+	normalize(particle2->getPosition(), pos2);
+	normalize(*anchorPoint1, pos3);
+	normalize(*anchorPoint2, pos4);
+
+	std::cout<<"POS1 "<<pos1.x<<" "<<pos1.y<<std::endl;
+	std::cout<<"POS2 "<<pos2.x<<" "<<pos2.y<<std::endl;
+	std::cout<<"POS3 "<<pos3.x<<" "<<pos3.y<<std::endl;
+	std::cout<<"POS4 "<<pos4.x<<" "<<pos4.y<<std::endl;
+
+	// Paint particles
+	glColor3f(1, 1, 1);
+	glRectf(pos1.x - PARTICLESIZE/2, pos1.y - PARTICLESIZE/2, pos1.x + PARTICLESIZE/2, pos1.y + PARTICLESIZE/2);
+	glRectf(pos2.x - PARTICLESIZE/2, pos2.y - PARTICLESIZE/2, pos2.x + PARTICLESIZE/2, pos2.y + PARTICLESIZE/2);
+	
+	// Paint anchorpoints
 	glColor3f(1, 0, 0);
-	cyclone::Vector3 pos1;
-	normalize(particle1.getPosition(),pos1);
-	glRectf(-pos1.x-0.03, pos1.y + 0.03, pos1.x + 0.03, pos1.y - 0.3);
-	//glRectf(particle2.getPosition().x - 5, particle2.getPosition().y - 5, particle2.getPosition().x + 5, particle2.getPosition().y + 5);
-	//glRectf(-0.75f,0.75f, 0.75f, -0.75f);
+	glRectf(pos3.x - PARTICLESIZE/2, pos3.y - PARTICLESIZE/2, pos3.x + PARTICLESIZE/2, pos3.y + PARTICLESIZE/2);
+	glRectf(pos4.x - PARTICLESIZE/2, pos4.y - PARTICLESIZE/2, pos4.x + PARTICLESIZE/2, pos4.y + PARTICLESIZE/2);
 
 	// Update the displayed content.
     glFlush();
@@ -79,34 +102,41 @@ void display() {
 void update() {
 	// Clear accumulators
 	world.startFrame();
-
-	spring1.updateForce(&particle1, 0.05f);
-	spring2.updateForce(&particle2, 0.05f);
+	spring1->updateForce(particle1, 0.05f);
+	spring2->updateForce(particle2, 0.05f);
+	
 	world.runPhysics(0.05f);
+	
+	
 
 	glutPostRedisplay(); // Set a flag, so that the display function will be called again
 }
 
 void initialize(void) {
 	// Initialize objects
-	anchorPoint1 = cyclone::Vector3(WIDTH/3, HEIGHT/2, 0);
-	anchorPoint2 = cyclone::Vector3(WIDTH/3*2, HEIGHT/2, 0);
-	spring1 = cyclone::ParticleAnchoredSpring(&anchorPoint1, 1, 10);
-	spring2 = cyclone::ParticleAnchoredSpring(&anchorPoint2, .5, 10);
-	particle1 = cyclone::Particle();
-	particle2 = cyclone::Particle();
+	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/3, 0);
+	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/3, 0);
+	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, 1, 2);
+	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, .5, 2);
+	particle1 = new cyclone::Particle();
+	particle2 = new cyclone::Particle();
 	
 	// Set the acceleration, so that the particles will fall down
-	particle1.setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
-	particle2.setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
+	particle1->setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
+	particle2->setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
 
 	// Set the positions
-	particle1.setPosition(WIDTH/3, HEIGHT/2, 0);
-	particle2.setPosition(WIDTH/3*2, HEIGHT/2, 0);
+	particle1->setPosition(WIDTH/3, HEIGHT/2, 0);
+	particle2->setPosition(WIDTH/3*2, HEIGHT/2, 0);
 
 	// Set the mass
-	particle1.setMass(1);
-	particle2.setMass(1);
+	particle1->setMass(1);
+	particle2->setMass(1);
+
+	world.getParticles().push_back(particle1);
+	world.getParticles().push_back(particle2);
+	world.getForceRegistry().add(particle1, spring1);
+	world.getForceRegistry().add(particle2, spring2);
 }
 
 
@@ -114,7 +144,7 @@ void initialize(void) {
  * Normalize physic position to viewpoint
  */
 void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) {
-	out.x = position.x/WIDTH;
-	out.y = position.y/HEIGHT;
+	out.x = (position.x - WIDTH/2)/WIDTH;
+	out.y = (position.y - HEIGHT/2)/HEIGHT;
 	out.z = position.z/DEPTH;
 }
