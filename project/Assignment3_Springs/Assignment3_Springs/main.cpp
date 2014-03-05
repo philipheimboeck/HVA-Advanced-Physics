@@ -184,8 +184,10 @@ void keyPress(unsigned char key, int x, int y)
 			break;
 		case 49: // 1
 			selectedSpring = 1;
+			break;
 		case 50: // 2
 			selectedSpring = 2;
+			break;
 		default:
 			std::cout<<(int)key<<std::endl;
 	}
