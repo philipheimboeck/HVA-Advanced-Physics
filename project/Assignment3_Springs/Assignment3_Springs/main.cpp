@@ -1,3 +1,16 @@
+/*
+ * Assignment 3 - Springs
+ * by Mathis Florian and Heimboeck Philip
+ *
+ * This class simulates a slingshot, that consists of two rubber bands with different stiffnesses and "the place, where you put your stones in it"
+ * (I have no idea, what this is called..)
+ * Because the two rubber bands are not equal, the particle (represents "the place") will always head to the stronger band
+ * 
+ * By pressing enter the sling will be pulled and by pressing enter again it will be released
+ * By pressing 1 or 2 you can switch between the rubber bands
+ * By pressing + or - the stiffness of the selected rubber band will be increased or decreased
+ */
+
 #include <cyclone\core.h>
 #include <gl\glut.h>
 #include <cyclone\pworld.h>
@@ -14,8 +27,11 @@
 void display();
 void update();
 
+float springConstant1 = 0.5;
+float springConstant2 = 0.5;
 cyclone::ParticleAnchoredSpring* spring1;
 cyclone::ParticleAnchoredSpring* spring2;
+int selectedSpring = 1;
 cyclone::Vector3* anchorPoint1;
 cyclone::Vector3* anchorPoint2;
 cyclone::Particle* particle1;
@@ -26,10 +42,7 @@ void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out);
 void keyPress(unsigned char key, int x, int y);
 bool pull = false;
 
-/*
- * Assignment 3 - Springs
- * by Mathis Florian and Heimboeck Philip
- */
+
 int main(int argc, char** argv) {
 	// Init glut
 	glutInit(&argc, argv);
@@ -80,9 +93,9 @@ void display() {
 	normalize(particle1->getPosition(), pos1);
 	normalize(*anchorPoint1, pos3);
 	normalize(*anchorPoint2, pos4);
-	std::cout<<"P: "<<particle1->getPosition().x<<" "<<particle1->getPosition().y<<" | "<<pos1.x<<" "<<pos1.y<<" | "<<pos1.x - PARTICLESIZE/2<<" "<<pos1.x + PARTICLESIZE/2<<std::endl;
-	std::cout<<"A1: "<<anchorPoint1->x<<" "<<anchorPoint1->y<<" | "<<pos3.x<<" "<<pos3.y<<" | "<<pos3.x - PARTICLESIZE/2<<" "<<pos3.x + PARTICLESIZE/2<<std::endl;
-	std::cout<<"A2: "<<anchorPoint2->x<<" "<<anchorPoint2->y<<" | "<<pos4.x<<" "<<pos4.y<<" | "<<pos4.x - PARTICLESIZE/2<<" "<<pos4.x + PARTICLESIZE/2<<std::endl;
+	//std::cout<<"P: "<<particle1->getPosition().x<<" "<<particle1->getPosition().y<<" | "<<pos1.x<<" "<<pos1.y<<" | "<<pos1.x - PARTICLESIZE/2<<" "<<pos1.x + PARTICLESIZE/2<<std::endl;
+	//std::cout<<"A1: "<<anchorPoint1->x<<" "<<anchorPoint1->y<<" | "<<pos3.x<<" "<<pos3.y<<" | "<<pos3.x - PARTICLESIZE/2<<" "<<pos3.x + PARTICLESIZE/2<<std::endl;
+	//std::cout<<"A2: "<<anchorPoint2->x<<" "<<anchorPoint2->y<<" | "<<pos4.x<<" "<<pos4.y<<" | "<<pos4.x - PARTICLESIZE/2<<" "<<pos4.x + PARTICLESIZE/2<<std::endl;
 
     cyclone::ParticleWorld::Particles &particles = world.getParticles();
 	 for (cyclone::ParticleWorld::Particles::iterator p = particles.begin();
@@ -118,26 +131,63 @@ void display() {
 void update() {
 	// Clear accumulators
 	world.startFrame();
-	spring1->updateForce(particle1, 0.05f);
 	
-	world.runPhysics(0.05f);
+	if ( !pull ) world.runPhysics(0.05f); //Pause the physic when we "pull" the particle
 	
 	glutPostRedisplay(); // Set a flag, so that the display function will be called again
 }
 
 void keyPress(unsigned char key, int x, int y)
 {
-	if (key == 13)
-	{
-		if ( !pull ) {
-			//world.getForceRegistry().add(particle1, spring3);
-			particle1->setAcceleration(0,-60,0);
-		} else {
-			//world.getForceRegistry().remove(particle1, spring3);
-			particle1->setAcceleration(0,0,0);
-		}
+	// Press enter
+	switch (key)
+		{
+		case 13: // enter
+			
+			// First we tried to add another force to the particle that pulls it backwards (spanning the sling)
+			// But it was not possible to remove the force because that method is missing
+			// Therefore we now set the position and pause the physics simulation (yeah it is a bad hack but at least it works)
+			if ( !pull ) {
+				particle1->setPosition(WIDTH/2, HEIGHT, 0);
+				//world.getForceRegistry().add(particle1, spring3);
+			} else {
+				//world.getForceRegistry().remove(particle1, spring3); 
+			}
 
-		pull = !pull;
+			pull = !pull;
+			break;
+		case 43: // +
+			if ( selectedSpring == 1) {
+				springConstant1 += 0.1;
+				springConstant1 = min(1, springConstant1);
+
+				spring1->init(anchorPoint1, springConstant1, 0);
+			} else {
+				springConstant2 += 0.1;
+				springConstant2 = min(1, springConstant2);
+
+				spring2->init(anchorPoint2, springConstant2, 0);
+			}
+			break;
+		case 45: // -
+			if ( selectedSpring == 1) {
+				springConstant1 -= 0.1;
+				springConstant1 = max(0, springConstant1);
+
+				spring1->init(anchorPoint1, springConstant1, 0);
+			} else {
+				springConstant2 -= 0.1;
+				springConstant2 = max(0, springConstant2);
+
+				spring2->init(anchorPoint2, springConstant2, 0);
+			}
+			break;
+		case 49: // 1
+			selectedSpring = 1;
+		case 50: // 2
+			selectedSpring = 2;
+		default:
+			std::cout<<(int)key<<std::endl;
 	}
 }
 
@@ -145,12 +195,9 @@ void initialize(void) {
 	// Initialize objects
 	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/3, 0);
 	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/3, 0);
-	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, .2, 1);
-	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, .4, 1);
+	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, springConstant1, 0);
+	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, springConstant2, 0);
 	particle1 = new cyclone::Particle();
-
-	// Set the acceleration, so that the particles will fall down
-	//particle1->setAcceleration(cyclone::Vector3::HIGH_GRAVITY);
 
 	// Set the positions
 	particle1->setPosition(WIDTH/2, HEIGHT/2, 0);
@@ -166,7 +213,6 @@ void initialize(void) {
 
 	world.getForceRegistry().add(particle1, spring1);
 	world.getForceRegistry().add(particle1, spring2);
-
 }
 
 /*
