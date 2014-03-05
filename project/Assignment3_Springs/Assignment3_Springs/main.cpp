@@ -25,6 +25,11 @@ cyclone::ParticleWorld world = cyclone::ParticleWorld(10);
 void initialize(void);
 void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out);
 
+
+/*
+ * Assignment 3 - Springs
+ * by Mathis Florian and Heimboeck Philip
+ */
 int main(int argc, char** argv) {
 	// Init glut
 	glutInit(&argc, argv);
@@ -128,8 +133,8 @@ void initialize(void) {
 	// Initialize objects
 	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/3, 0);
 	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/3, 0);
-	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, 1, 2);
-	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, .5, 2);
+	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, .4, 1);
+	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, .2, 1);
 	particle1 = new cyclone::Particle();
 	particle2 = new cyclone::Particle();
 	
