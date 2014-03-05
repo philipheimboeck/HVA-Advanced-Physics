@@ -80,6 +80,20 @@ void display() {
 	std::cout<<"POS3 "<<pos3.x<<" "<<pos3.y<<std::endl;
 	std::cout<<"POS4 "<<pos4.x<<" "<<pos4.y<<std::endl;
 
+	
+    cyclone::ParticleWorld::Particles &particles = world.getParticles();
+	 for (cyclone::ParticleWorld::Particles::iterator p = particles.begin();
+        p != particles.end();
+        p++)
+    {
+        cyclone::Particle *particle = *p;
+        const cyclone::Vector3 &pos = particle->getPosition();
+        glPushMatrix();
+        glTranslatef(pos.x, pos.y, pos.z);
+        glutSolidSphere(0.1f, 20, 10);
+        glPopMatrix();
+    }
+
 	// Paint particles
 	glColor3f(1, 1, 1);
 	glRectf(pos1.x - PARTICLESIZE/2, pos1.y - PARTICLESIZE/2, pos1.x + PARTICLESIZE/2, pos1.y + PARTICLESIZE/2);
@@ -107,8 +121,6 @@ void update() {
 	
 	world.runPhysics(0.05f);
 	
-	
-
 	glutPostRedisplay(); // Set a flag, so that the display function will be called again
 }
 
@@ -129,16 +141,21 @@ void initialize(void) {
 	particle1->setPosition(WIDTH/3, HEIGHT/2, 0);
 	particle2->setPosition(WIDTH/3*2, HEIGHT/2, 0);
 
+	// Set Velocity and Damping Factor
+	particle1->setVelocity(0,0,0);
+	particle2->setVelocity(0,0,0);
+	particle1->setDamping(0.9f); // you need to set the damping factor otherwise the velocity calculations lead to a IND
+	particle2->setDamping(0.9f);
+
 	// Set the mass
 	particle1->setMass(1);
-	particle2->setMass(1);
+	particle2->setMass(1);	
 
 	world.getParticles().push_back(particle1);
 	world.getParticles().push_back(particle2);
 	world.getForceRegistry().add(particle1, spring1);
 	world.getForceRegistry().add(particle2, spring2);
 }
-
 
 /*
  * Normalize physic position to viewpoint
