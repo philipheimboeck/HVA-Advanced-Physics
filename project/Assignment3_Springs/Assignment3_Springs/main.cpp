@@ -1,11 +1,23 @@
 /*
  * Assignment 3 - Springs
- * by Mathis Florian and Heimboeck Philip
+ * by Mathis Florian (StdNo: 500702331) and Heimböck Philip (StdNo: 500702328)
  *
- * This class simulates a slingshot, that consists of two rubber bands with different stiffnesses and "the place, where you put your stones in it"
- * (I have no idea, what this is called..)
- * Because the two rubber bands are not equal, the particle (represents "the place") will always head to the stronger band
+ * This class simulates a slingshot, that consists of two rubber bands 
+ * with different stiffnesses and a pad. Since the two rubber bands are not equal, 
+ * the particle representing the pad resp. the object in it will always head to towards 
+ * the stronger band.
+ *
+ * Weight of the Pad: 7 Grams
+ * Springs: 
+ *	- Restlength: 1cm
+ *	- Spring constant/Stiffness (k): 0 to 10 N/m
+ *	- Pulled distance (x): 11cm
+ *
+ * F = -k * x
+ * F = -5N/m * 0.1m = -0.5 N
+ * Therefor, our slingshot is pulled back with a force of -0.5 Newton per rubber band.
  * 
+ *
  * By pressing enter the sling will be pulled and by pressing enter again it will be released
  * By pressing 1 or 2 you can switch between the rubber bands
  * By pressing + or - the stiffness of the selected rubber band will be increased or decreased
@@ -17,16 +29,12 @@
 #include <cyclone\pfgen.h>
 #include <iostream>
 #include <string>
-
 #include "glutBasic.h"
 
 #define WIDTH	640
 #define HEIGHT	320
-#define DEPTH   300
+#define DEPTH   300 // for possible 3D extension
 #define PARTICLESIZE 0.06
-
-void display();
-void update();
 
 float springConstant1 = 0.5;
 float springConstant2 = 0.5;
@@ -38,12 +46,18 @@ cyclone::Vector3* anchorPoint2;
 cyclone::Particle* particle1;
 cyclone::ParticleWorld world = cyclone::ParticleWorld(10);
 
+void display();
+void update();
 void initialize(void);
 void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out);
 void keyPress(unsigned char key, int x, int y);
 bool pull = false;
 
-
+/*
+ * Application entry point
+ * This method will initialize the basic settings 
+ * of our physic application and start the cyclone engine.
+ */
 int main(int argc, char** argv) {
 	// Init glut
 	glutInit(&argc, argv);
@@ -69,6 +83,7 @@ int main(int argc, char** argv) {
 	// * if no callback is defined for the event, the event is ignored
 	glutMainLoop();
 
+	// clean up the world
 	delete spring1;
 	delete spring2;
 	delete particle1;
@@ -79,8 +94,10 @@ int main(int argc, char** argv) {
 }
 
 /**
- * Called each frame to display the 3D scene. Delegates to
- * the application.
+ * Display
+ * This method is called every frame in order to 
+ * repaint our scene with the applied physics
+ * and calculated positions of the particles.
  */
 void display() {
 
@@ -90,26 +107,11 @@ void display() {
 	// Get Positions of the objects
 	cyclone::Vector3 pos1, pos3, pos4;
 
-	
+	// Normalize particle and anchor points in order to 
+	// correctly draw them to our scene
 	normalize(particle1->getPosition(), pos1);
 	normalize(*anchorPoint1, pos3);
 	normalize(*anchorPoint2, pos4);
-	//std::cout<<"P: "<<particle1->getPosition().x<<" "<<particle1->getPosition().y<<" | "<<pos1.x<<" "<<pos1.y<<" | "<<pos1.x - PARTICLESIZE/2<<" "<<pos1.x + PARTICLESIZE/2<<std::endl;
-	//std::cout<<"A1: "<<anchorPoint1->x<<" "<<anchorPoint1->y<<" | "<<pos3.x<<" "<<pos3.y<<" | "<<pos3.x - PARTICLESIZE/2<<" "<<pos3.x + PARTICLESIZE/2<<std::endl;
-	//std::cout<<"A2: "<<anchorPoint2->x<<" "<<anchorPoint2->y<<" | "<<pos4.x<<" "<<pos4.y<<" | "<<pos4.x - PARTICLESIZE/2<<" "<<pos4.x + PARTICLESIZE/2<<std::endl;
-
-    cyclone::ParticleWorld::Particles &particles = world.getParticles();
-	 for (cyclone::ParticleWorld::Particles::iterator p = particles.begin();
-        p != particles.end();
-        p++)
-    {
-        cyclone::Particle *particle = *p;
-        const cyclone::Vector3 &pos = particle->getPosition();
-        glPushMatrix();
-        glTranslatef(pos.x, pos.y, pos.z);
-        glutSolidSphere(0.1f, 20, 10);
-        glPopMatrix();
-    }
 
 	// Paint particles
 	glColor3f(1, 0, 0);
@@ -119,7 +121,6 @@ void display() {
 	if ( selectedSpring == 1 ) glColor3f(0, 1, 0);
 	else glColor3f(1, 1, 1);
 	glRectf(pos3.x - PARTICLESIZE/2, pos3.y - PARTICLESIZE/2, pos3.x + PARTICLESIZE/2, pos3.y + PARTICLESIZE/2);
-	
 
 	if ( selectedSpring == 2 ) glColor3f(0, 1, 0);
 	else glColor3f(1, 1, 1);
@@ -127,7 +128,7 @@ void display() {
 
 	glColor3f(1, 1, 1);
 
-	// Draw strength
+	// Write strength text to each fixed anchorpoint
 	glRasterPos2f(pos3.x, pos3.y - .1);
 	std::string strengthText = std::to_string((long long)(springConstant1*10));
 	for ( size_t i = 0; i < strengthText.length(); i++ ) {
@@ -151,14 +152,19 @@ void display() {
 	glVertex3f(pos1.x, pos1.y, 0);
 	glEnd();
 
-	// Draw description
+	// Draw description to help 
 	glRasterPos2f(-.99, .9);
-	std::string text = "Select the left rubber band with 0, the right rubber band with 1"; 
+	std::string text = "Select the left rubber band with [0], the right rubber band with [1]."; 
 	for ( size_t i = 0; i < text.length(); i++ ) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
 	}
 	glRasterPos2f(-.99, .8);
-	text = "Increase the strength with +  and decrease it with -";
+	text = "Increase the strength with [+] and decrease it with [-].";
+	for ( size_t i = 0; i < text.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
+	}
+	glRasterPos2f(-.99, .7);
+	text = "Hit [ENTER] key to draw sling and again to release the shot.";
 	for ( size_t i = 0; i < text.length(); i++ ) {
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
 	}
@@ -169,21 +175,29 @@ void display() {
 }
 
 /**
- * Called each frame to update the 3D scene. Delegates to
- * the application.
+ * Update
+ * Hold on physic engine whenever we want to pull our slingshot
  */
 void update() {
 	// Clear accumulators
 	world.startFrame();
 	
-	if ( !pull ) world.runPhysics(0.05f); //Pause the physic when we "pull" the particle
+	// Pause the physic when we "pull" the particle
+	if ( !pull ) world.runPhysics(0.05f);
 	
-	glutPostRedisplay(); // Set a flag, so that the display function will be called again
+	// Set a flag, so that the display function will be called again
+	glutPostRedisplay(); 
 }
 
+/*
+ * keyPress
+ * This method handles the user inputs in order
+ * to update parameters of our slingshot like
+ * stiffness of each rubber band.
+ */
 void keyPress(unsigned char key, int x, int y)
 {
-	// Press enter
+	// Press enter to draw and again to release the slingshot
 	switch (key)
 		{
 		case 13: // enter
@@ -202,27 +216,23 @@ void keyPress(unsigned char key, int x, int y)
 			break;
 		case 43: // +
 			if ( selectedSpring == 1) {
-				springConstant1 += 0.1;
-				springConstant1 = min(1, springConstant1);
-
+				// Increase spring constant of left rubber band
+				springConstant1 = min(1, springConstant1 + 0.1);
 				spring1->init(anchorPoint1, springConstant1, 0);
-			} else {
-				springConstant2 += 0.1;
-				springConstant2 = min(1, springConstant2);
-
+			} else { 
+				// Increase spring constant of right rubber band
+				springConstant2 = min(1, springConstant2 + 0.1);
 				spring2->init(anchorPoint2, springConstant2, 0);
 			}
 			break;
 		case 45: // -
 			if ( selectedSpring == 1) {
-				springConstant1 -= 0.1;
-				springConstant1 = max(0, springConstant1);
-
+				// Decrease spring constant of left rubber band
+				springConstant1 = max(0, springConstant1 - 0.1);
 				spring1->init(anchorPoint1, springConstant1, 0);
 			} else {
-				springConstant2 -= 0.1;
-				springConstant2 = max(0, springConstant2);
-
+				// Decrease spring constant of right rubber band
+				springConstant2 = max(0, springConstant2 - 0.1);
 				spring2->init(anchorPoint2, springConstant2, 0);
 			}
 			break;
@@ -237,12 +247,17 @@ void keyPress(unsigned char key, int x, int y)
 	}
 }
 
+/*
+ * Initialize our physical world
+ * by creating two anchor points and two springs for each rubber band side
+ */
 void initialize(void) {
 	// Initialize objects
 	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/2, 0);
 	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/2, 0);
-	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, springConstant1, 0);
-	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, springConstant2, 0);
+	// Set spring with given spring constant and rest length of 1cm
+	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, springConstant1, 10);
+	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, springConstant2, 10);
 	particle1 = new cyclone::Particle();
 
 	// Set the positions
@@ -252,17 +267,19 @@ void initialize(void) {
 	particle1->setVelocity(0,0,0);
 	particle1->setDamping(0.9f); // you need to set the damping factor otherwise the velocity calculations lead to a IND
 
-	// Set the mass
-	particle1->setMass(1);
+	// Set the mass to 7 Gramms
+	particle1->setMass(7);
 
+	// Add Particle to the World (insert at the end of particle list)
 	world.getParticles().push_back(particle1);
 
+	// Add Force of Particle 1 to Spring 1 and Spring 2 to the force registry
 	world.getForceRegistry().add(particle1, spring1);
 	world.getForceRegistry().add(particle1, spring2);
 }
 
 /*
- * Normalize physic position to viewpoint
+ * Normalize physical position to viewpoint
  */
 void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) 
 {
