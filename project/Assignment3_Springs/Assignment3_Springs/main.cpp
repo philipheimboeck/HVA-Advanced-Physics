@@ -111,12 +111,16 @@ void display() {
     }
 
 	// Paint particles
-	glColor3f(1, 1, 1);
+	glColor3f(1, 0, 0);
 	glRectf(pos1.x - PARTICLESIZE/2, pos1.y - PARTICLESIZE/2, pos1.x + PARTICLESIZE/2, pos1.y + PARTICLESIZE/2);
 	
 	// Paint anchorpoints
-	glColor3f(1, 0, 0);
+	if ( selectedSpring == 1 ) glColor3f(0, 1, 0);
+	else glColor3f(1, 1, 1);
 	glRectf(pos3.x - PARTICLESIZE/2, pos3.y - PARTICLESIZE/2, pos3.x + PARTICLESIZE/2, pos3.y + PARTICLESIZE/2);
+
+	if ( selectedSpring == 2 ) glColor3f(0, 1, 0);
+	else glColor3f(1, 1, 1);
 	glRectf(pos4.x - PARTICLESIZE/2, pos4.y - PARTICLESIZE/2, pos4.x + PARTICLESIZE/2, pos4.y + PARTICLESIZE/2);
 
 	// Update the displayed content.
@@ -220,8 +224,8 @@ void initialize(void) {
 /*
  * Normalize physic position to viewpoint
  */
-void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) {
-	
+void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) 
+{
 	out.x = (position.x - WIDTH/2)/WIDTH;
 	out.y = (position.y - HEIGHT/2)/HEIGHT;
 	out.z = position.z/DEPTH;
