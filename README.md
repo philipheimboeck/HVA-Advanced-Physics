@@ -1,9 +1,10 @@
-hva_springs
+HVA Advanced Physics
 ===========
+by Florian Mathis and Philip Heimböck
 
-Assignment 3 - Simulation of Springs
+Contains the following projects:
+* Assignment 3 - Simulation of a Slingshot with spring forces
+* Assignment 4 - Simulation "Wall of Boxes"
 
 
-lets do this
-
-Before you can execute the program, you need to copy the dll files to the DEBUG or RELEASE folder of the Visual Studio project.
+Before you can execute any program, you need to copy the dll files to the DEBUG or RELEASE folder of the Visual Studio project.
