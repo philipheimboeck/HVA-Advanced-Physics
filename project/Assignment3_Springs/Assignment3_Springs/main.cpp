@@ -122,6 +122,17 @@ void display() {
 	if ( selectedSpring == 2 ) glColor3f(0, 1, 0);
 	else glColor3f(1, 1, 1);
 	glRectf(pos4.x - PARTICLESIZE/2, pos4.y - PARTICLESIZE/2, pos4.x + PARTICLESIZE/2, pos4.y + PARTICLESIZE/2);
+	
+	glColor3f(1, 1, 1);
+	glBegin(GL_LINES);
+	glVertex3f(pos3.x, pos3.y, 0);
+	glVertex3f(pos1.x, pos1.y, 0);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(pos4.x, pos4.y, 0);
+	glVertex3f(pos1.x, pos1.y, 0);
+	glEnd();
 
 	// Update the displayed content.
     glFlush();
@@ -152,7 +163,7 @@ void keyPress(unsigned char key, int x, int y)
 			// But it was not possible to remove the force because that method is missing
 			// Therefore we now set the position and pause the physics simulation (yeah it is a bad hack but at least it works)
 			if ( !pull ) {
-				particle1->setPosition(WIDTH/2, HEIGHT, 0);
+				particle1->setPosition(WIDTH/2, 50, 0);
 				//world.getForceRegistry().add(particle1, spring3);
 			} else {
 				//world.getForceRegistry().remove(particle1, spring3); 
@@ -199,8 +210,8 @@ void keyPress(unsigned char key, int x, int y)
 
 void initialize(void) {
 	// Initialize objects
-	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/3, 0);
-	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/3, 0);
+	anchorPoint1 = new cyclone::Vector3(WIDTH/3, HEIGHT/2, 0);
+	anchorPoint2 = new cyclone::Vector3(WIDTH/3*2, HEIGHT/2, 0);
 	spring1 = new cyclone::ParticleAnchoredSpring(anchorPoint1, springConstant1, 0);
 	spring2 = new cyclone::ParticleAnchoredSpring(anchorPoint2, springConstant2, 0);
 	particle1 = new cyclone::Particle();
@@ -226,7 +237,7 @@ void initialize(void) {
  */
 void normalize(const cyclone::Vector3 &position, cyclone::Vector3 &out) 
 {
-	out.x = (position.x - WIDTH/2)/WIDTH;
-	out.y = (position.y - HEIGHT/2)/HEIGHT;
+	out.x = (position.x - WIDTH/2)/(WIDTH/2);
+	out.y = (position.y - HEIGHT/2)/(HEIGHT/2);
 	out.z = position.z/DEPTH;
 }
