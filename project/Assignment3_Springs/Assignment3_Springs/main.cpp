@@ -16,13 +16,14 @@
 #include <cyclone\pworld.h>
 #include <cyclone\pfgen.h>
 #include <iostream>
+#include <string>
 
 #include "glutBasic.h"
 
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300
-#define PARTICLESIZE 0.03
+#define PARTICLESIZE 0.06
 
 void display();
 void update();
@@ -118,12 +119,28 @@ void display() {
 	if ( selectedSpring == 1 ) glColor3f(0, 1, 0);
 	else glColor3f(1, 1, 1);
 	glRectf(pos3.x - PARTICLESIZE/2, pos3.y - PARTICLESIZE/2, pos3.x + PARTICLESIZE/2, pos3.y + PARTICLESIZE/2);
+	
 
 	if ( selectedSpring == 2 ) glColor3f(0, 1, 0);
 	else glColor3f(1, 1, 1);
 	glRectf(pos4.x - PARTICLESIZE/2, pos4.y - PARTICLESIZE/2, pos4.x + PARTICLESIZE/2, pos4.y + PARTICLESIZE/2);
-	
+
 	glColor3f(1, 1, 1);
+
+	// Draw strength
+	glRasterPos2f(pos3.x, pos3.y - .1);
+	std::string strengthText = std::to_string((long long)(springConstant1*10));
+	for ( size_t i = 0; i < strengthText.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, strengthText.at(i));
+	}
+	
+	glRasterPos2f(pos4.x, pos4.y - .1);
+	strengthText = std::to_string((long long)(springConstant2*10));
+	for ( size_t i = 0; i < strengthText.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, strengthText.at(i));
+	}
+	
+	// Draw rubber bands
 	glBegin(GL_LINES);
 	glVertex3f(pos3.x, pos3.y, 0);
 	glVertex3f(pos1.x, pos1.y, 0);
@@ -134,6 +151,18 @@ void display() {
 	glVertex3f(pos1.x, pos1.y, 0);
 	glEnd();
 
+	// Draw description
+	glRasterPos2f(-.99, .9);
+	std::string text = "Select the left rubber band with 0, the right rubber band with 1"; 
+	for ( size_t i = 0; i < text.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
+	}
+	glRasterPos2f(-.99, .8);
+	text = "Increase the strength with +  and decrease it with -";
+	for ( size_t i = 0; i < text.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
+	}
+	
 	// Update the displayed content.
     glFlush();
     glutSwapBuffers();
