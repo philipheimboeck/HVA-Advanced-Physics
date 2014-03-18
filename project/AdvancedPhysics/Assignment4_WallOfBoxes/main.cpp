@@ -95,7 +95,7 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	gluLookAt(NUMBEROFBOXES*BOXSIZE, 8.0, -200,  NUMBEROFBOXES*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
+	gluLookAt(NUMBEROFBOXES*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
 
 	// Print all axes
 	glColor3f(0,0,0);
@@ -146,13 +146,15 @@ void display() {
 
 void update()
 {
-	missileBox.integrate(0.05f);
+	float duration = 0.05f;
+
+	missileBox.integrate(duration);
 	missileBox.calculateInternals();
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ )
 		{
-			boxes[i][j].integrate(0.05f);
+			boxes[i][j].integrate(duration);
 			boxes[i][j].calculateInternals();
 		}
 	}
@@ -170,6 +172,7 @@ void update()
     cData.tolerance = (cyclone::real)0.1;
 
 	// Check ground plane collisions
+	cyclone::CollisionDetector::boxAndHalfSpace(missileBox, plane, &cData);
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ )
@@ -180,7 +183,7 @@ void update()
 		}
 	}
 
-	float duration = 0.05f;
+	
 	// Resolve detected contacts
     resolver.resolveContacts(
         cData.contactArray,
@@ -212,19 +215,21 @@ void keyPress(unsigned char key, int x, int y)
 
 void initialize()
 {
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), 3);
-	
+	// Set random seet
 	std::srand(time(NULL));
+
+	// Initialize missile box
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), rand() % 100 + 1);
+	
+	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE, 
-				j * 2 * BOXSIZE, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE + 10, 
+				j * 2 * BOXSIZE + 10, 50.0f);
 
-			cyclone::real mass = rand() % 100 + 1;
-
-			initializeBox(&boxes[i][j], position, mass);
+			initializeBox(&boxes[i][j], position, rand() % 100 + 1);
 		}
 	}
 
