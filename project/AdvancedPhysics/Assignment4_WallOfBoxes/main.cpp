@@ -19,7 +19,9 @@
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300 // for possible 3D extension
-#define NUMBEROFBOXES 2
+#define NUMBEROFBOXES 3
+/** Holds the maximum number of contacts. */
+#define MAXCONTACTS 256
 
 void display();
 void update();
@@ -30,6 +32,10 @@ void launchBox(void);
 
 Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
 Box missileBox;
+
+cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
+cyclone::Contact contacts[MAXCONTACTS];
+cyclone::CollisionData cData;
 
 /*
 * Application entry point
@@ -149,6 +155,37 @@ void update()
 		}
 	}
 
+	/** GENERATE Contacts **/
+	// Create the ground plane data
+    cyclone::CollisionPlane plane;
+    plane.direction = cyclone::Vector3(0,1,0);
+    plane.offset = 0;
+
+	// Set up the collision data structure
+    cData.reset(MAXCONTACTS);
+    cData.friction = (cyclone::real)0.9;
+    cData.restitution = (cyclone::real)0.1;
+    cData.tolerance = (cyclone::real)0.1;
+
+	// Check ground plane collisions
+	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	{
+		for ( int j = 0; j < NUMBEROFBOXES; j++ )
+		{
+			if (!cData.hasMoreContacts()) return;
+			Box *box = &boxes[i][j];
+			cyclone::CollisionDetector::boxAndHalfSpace(*box, plane, &cData);
+		}
+	}
+
+	float duration = 0.05f;
+	// Resolve detected contacts
+    resolver.resolveContacts(
+        cData.contactArray,
+        cData.contactCount,
+        duration
+        );
+
 	// Set a flag, so that the display function will be called again
 	glutPostRedisplay();
 }
@@ -169,7 +206,7 @@ void keyPress(unsigned char key, int x, int y)
 	}
 }
 
-void initialize() 
+void initialize()
 {
 	initializeBox(&missileBox, cyclone::Vector3(0, 0, 10.0f), 3);
 
@@ -185,6 +222,8 @@ void initialize()
 			initializeBox(&boxes[i][j], position, mass);
 		}
 	}
+
+	cData.contactArray = contacts;
 }
 
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
@@ -198,11 +237,11 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 	box->calculateInertia();
 
 
-	// body->clearAccumulators();
-	// body->setAcceleration(0,-10.0f,0);
+	 box->body->clearAccumulators();
+	 box->body->setAcceleration(0,-10.0f,0);
 
-	// body->setCanSleep(false);
-	// body->setAwake();
+	 box->body->setCanSleep(false);
+	 box->body->setAwake();
 
 	box->recalculate();
 }
