@@ -12,6 +12,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <stdlib.h>
+#include <time.h>
 
 #include "glutBasic.h"
 #include "Box.h"
@@ -19,7 +21,8 @@
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300 // for possible 3D extension
-#define NUMBEROFBOXES 2
+#define NUMBEROFBOXES 5
+#define BOXSIZE 3
 
 void display();
 void update();
@@ -87,7 +90,7 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	gluLookAt(-25.0, 8.0, 5.0,  0.0, 5.0, 22.0,  0.0, 1.0, 0.0);
+	gluLookAt(NUMBEROFBOXES*BOXSIZE, 8.0, -200,  NUMBEROFBOXES*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
 
 	// Print all axes
 	glColor3f(0,0,0);
@@ -157,9 +160,11 @@ void keyPress(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 'r' || 'R':
+	case 'r': case 'R':
 		// Reset
+		std::cout<<"Reset"<<std::endl;
 		initialize();
+		break;
 	case ' ':
 		// Launch box
 		launchBox();
@@ -171,16 +176,17 @@ void keyPress(unsigned char key, int x, int y)
 
 void initialize() 
 {
-	initializeBox(&missileBox, cyclone::Vector3(0, 0, 10.0f), 3);
-
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), 3);
+	
+	std::srand(time(NULL));
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * boxes[i][j].halfSize.x, j * 2 * 
-				boxes[i][j].halfSize.y, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE, 
+				j * 2 * BOXSIZE, 50.0f);
 
-			cyclone::real mass = 3;
+			cyclone::real mass = rand() % 100 + 1;
 
 			initializeBox(&boxes[i][j], position, mass);
 		}
@@ -189,20 +195,21 @@ void initialize()
 
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 {
-	box->halfSize = cyclone::Vector3(3, 3, 3);
+	box->halfSize = cyclone::Vector3(BOXSIZE, BOXSIZE, BOXSIZE);
+	
 	box->setPosition(position);
 	box->setDamping(0.95f, 0.8f);
 	box->setOrientation(1, 0, 0, 0);
 	box->setMass(mass);
+	box->body->setVelocity(0.0f, 0.0f, 0.0f);
 
 	box->calculateInertia();
 
+	box->body->clearAccumulators();
+	box->body->setAcceleration(0,-10.0f,0);
 
-	// body->clearAccumulators();
-	// body->setAcceleration(0,-10.0f,0);
-
-	// body->setCanSleep(false);
-	// body->setAwake();
+	box->body->setCanSleep(false);
+	box->body->setAwake();
 
 	box->recalculate();
 }
@@ -210,6 +217,7 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 void launchBox(void)
 {
 	std::cout<<"Box launched"<<std::endl;
+	missileBox.body->setVelocity(0.0f, 30.0f, 40.0f);
 }
 
 bool is_number(const std::string& s)
