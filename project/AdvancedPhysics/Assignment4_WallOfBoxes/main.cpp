@@ -21,7 +21,7 @@
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300 // for possible 3D extension
-#define NUMBEROFBOXES 3
+#define NUMBEROFBOXES 5
 #define BOXSIZE 3
 #define MAXCONTACTS 256
 #define MINMASS 50
@@ -102,6 +102,15 @@ void display() {
 	glLoadIdentity();
 	gluLookAt(NUMBEROFBOXES*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
 
+	// Floor
+	glColor3f(0.7, 0.8, 0.8);
+	glBegin(GL_QUADS);
+	glVertex3f(0,0,0); glTexCoord2f(0,0); glNormal3f(0,1,0);
+    glVertex3f(300,0,0); glTexCoord2f(1,0); glNormal3f(0,1,0);
+    glVertex3f(300,0,300); glTexCoord2f(1.0,1.0); glNormal3f(0,1,0);
+    glVertex3f(0,0,300); glTexCoord2f(0.0,1.0); glNormal3f(0,1,0);
+	glEnd();
+
 	// Print all axes
 	glColor3f(0,0,0);
 	glRasterPos3f(2, 0, 0);
@@ -152,8 +161,6 @@ void display() {
 	glDisable(GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
-
-	
 
 	// Update the displayed content.
 	glFlush();
@@ -288,14 +295,14 @@ void reset()
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE+1, 
-				j * 2 * BOXSIZE+1, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE, 
+				j * 2 * BOXSIZE, 50.0f);
 
 			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
 	}
 
-	cData.contactArray = contacts;
+	//cData.contactArray = contacts;
 }
 
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
