@@ -21,7 +21,7 @@
 #define WIDTH	640
 #define HEIGHT	320
 #define DEPTH   300 // for possible 3D extension
-#define NUMBEROFBOXES 5
+#define NUMBEROFBOXES 3
 #define BOXSIZE 3
 #define MAXCONTACTS 256
 
@@ -33,6 +33,7 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass);
 void launchBox(void);
 
 Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
+Box *boxPointers[NUMBEROFBOXES*NUMBEROFBOXES];
 Box missileBox;
 
 cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
@@ -183,7 +184,21 @@ void update()
 		}
 	}
 
-	
+	// Check each box-to-box collision
+	for ( int i=0; i < NUMBEROFBOXES*NUMBEROFBOXES; i++ )
+	{
+		for ( int j=i+1; j < NUMBEROFBOXES*NUMBEROFBOXES; j++ ) 
+		{
+			if (!cData.hasMoreContacts()) return;
+			Box *box = boxPointers[i];
+			Box *box2 = boxPointers[j];
+			cyclone::CollisionDetector::boxAndBox(*box, *box2, &cData);
+
+			// Add collission for each box to missilebox
+			cyclone::CollisionDetector::boxAndBox(*box, missileBox, &cData);
+		}
+	}
+
 	// Resolve detected contacts
     resolver.resolveContacts(
         cData.contactArray,
@@ -226,10 +241,11 @@ void initialize()
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE + 10, 
-				j * 2 * BOXSIZE + 10, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE, 
+				j * 2 * BOXSIZE, 50.0f);
 
 			initializeBox(&boxes[i][j], position, rand() % 100 + 1);
+			boxPointers[(i*NUMBEROFBOXES+j)] = &(boxes[i][j]);
 		}
 	}
 
@@ -248,8 +264,8 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 
 	box->calculateInertia();
 
-	box->body->clearAccumulators();
-	box->body->setAcceleration(0,-10.0f,0);
+    box->body->clearAccumulators();
+    box->body->setAcceleration(0,-1.0f,0);
 
 	box->body->setCanSleep(false);
 	box->body->setAwake();
@@ -260,7 +276,7 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 void launchBox(void)
 {
 	std::cout<<"Box launched"<<std::endl;
-	missileBox.body->setVelocity(0.0f, 30.0f, 40.0f);
+	missileBox.body->setVelocity(0.0f, 10.0f, 20.0f);
 }
 
 bool is_number(const std::string& s)
