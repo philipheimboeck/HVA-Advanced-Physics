@@ -216,12 +216,12 @@ void keyPress(unsigned char key, int x, int y)
 	case 'r': case 'R':
 		// Reset
 		std::cout<<"Reset"<<std::endl;
-		initialize();
+		reset();
 		break;
 	case 'n': case 'N':
 		// New
-		std::cout<<"Reset"<<std::endl;
-		reset();
+		std::cout<<"Initialize"<<std::endl;
+		initialize();
 		break;
 	case ' ':
 		// Launch box
