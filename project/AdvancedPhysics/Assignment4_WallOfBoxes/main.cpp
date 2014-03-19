@@ -18,10 +18,9 @@
 #include "glutBasic.h"
 #include "Box.h"
 
-#define WIDTH	640
-#define HEIGHT	320
-#define DEPTH   300 // for possible 3D extension
-#define NUMBEROFBOXES 3
+#define WIDTH	1028
+#define HEIGHT	640
+#define NUMBEROFBOXES 5
 #define BOXSIZE 3
 #define MAXCONTACTS 256
 #define MINMASS 50
@@ -35,6 +34,7 @@ void initialize();
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass);
 void reset();
 void launchBox(void);
+void setMissileBox();
 
 Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
 Box *boxPointers[NUMBEROFBOXES*NUMBEROFBOXES];
@@ -43,6 +43,10 @@ Box missileBox;
 cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
+
+cyclone::Vector3 velocity = cyclone::Vector3(0.0f, 5.0f, 40.0f);
+
+time_t launchTime; // Used for reseting the missile after an short period of time
 
 /*
 * Application entry point
@@ -55,6 +59,9 @@ int main(int argc, char** argv) {
 
 	// Init application physics
 	initialize();
+
+	// Initialize random
+	std::srand(time(NULL));
 
 	// Create a window
 	createWindow("Wall of Boxes", WIDTH, HEIGHT);
@@ -125,6 +132,14 @@ void display() {
 	glVertex3f(0, 0, 1000);
 	glEnd();
 
+	// Print velocity
+	cyclone::Vector3 pos1 = missileBox.body->getPosition();
+	cyclone::Vector3 pos2 = missileBox.body->getPosition() + velocity;
+	glBegin(GL_LINES);
+	glVertex3f(pos1.x, pos1.y, pos1.z);
+	glVertex3f(pos2.x, pos2.y, pos2.z);
+	glEnd();
+
 	// Render all Boxes
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
@@ -162,6 +177,12 @@ void display() {
 
 void update()
 {
+	// Reset missile?
+	if ( time(NULL) - launchTime > 3 )
+	{
+		setMissileBox();
+	}
+
 	float duration = 0.05f;
 
 	missileBox.integrate(duration);
@@ -249,28 +270,45 @@ void keyPress(unsigned char key, int x, int y)
 	case '-':
 		missileBox.setMass(max(missileBox.getMass() - 1, MINMASS));
 		break;
+	case 'w':
+		velocity.y++;
+		break;
+	case 's':
+		velocity.y--;
+		break;
+	case 'a':
+		velocity.x++;
+		break;
+	case 'd':
+		velocity.x--;
+		break;
 	default:
 		std::cout<<(int)key<<std::endl;
 	}
 }
 
-void initialize()
+void setMissileBox()
 {
-	// Set random seet
-	std::srand(time(NULL));
-
 	// Initialize missile box
 	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, BOXSIZE, 10.0f), (MAXMASS + MINMASS)/2);
+	// Reset launch time
+	launchTime = 0;
+}
+
+void initialize()
+{
+	// Initialize missile box
+	setMissileBox();
 	
 	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE, 
-				j * 2 * BOXSIZE, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE + 2, 
+				j * 2 * BOXSIZE + 2, 50.0f);
 
-			initializeBox(&boxes[i][j], position, rand() % MAXMASS + MINMASS);
+			initializeBox(&boxes[i][j], position, rand() % (MAXMASS-MINMASS)+1 + MINMASS);
 			boxPointers[(i*NUMBEROFBOXES+j)] = &(boxes[i][j]);
 		}
 	}
@@ -281,15 +319,15 @@ void initialize()
 void reset()
 {
 	// Reset missile box
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, BOXSIZE, 10.0f), missileBox.getMass());
+	setMissileBox();
 	
 	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
 	{
 		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE+1, 
-				j * 2 * BOXSIZE+1, 50.0f);
+			cyclone::Vector3 position(i * 2 * BOXSIZE + 2, 
+				j * 2 * BOXSIZE + 2, 50.0f);
 
 			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
@@ -321,8 +359,14 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 
 void launchBox(void)
 {
-	std::cout<<"Box launched"<<std::endl;
-	missileBox.body->setVelocity(0.0f, 10.0f, 20.0f);
+	// Don't launch missile box a second time
+	if ( launchTime == 0 ) {
+		std::cout<<"Box launched"<<std::endl;
+		missileBox.body->setVelocity(velocity);
+
+		// Save launch time (for reseting the missile)
+		launchTime = time(NULL);
+	}
 }
 
 bool is_number(const std::string& s)
