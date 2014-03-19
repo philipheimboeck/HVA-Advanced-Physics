@@ -34,7 +34,7 @@ void initialize();
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass);
 void reset();
 void launchBox(void);
-void setMissileBox();
+void setMissileBox(bool sameMass);
 
 Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
 Box *boxPointers[NUMBEROFBOXES*NUMBEROFBOXES];
@@ -178,9 +178,9 @@ void display() {
 void update()
 {
 	// Reset missile?
-	if ( time(NULL) - launchTime > 3 )
+	if ( launchTime != 0 && time(NULL) - launchTime > 3 )
 	{
-		setMissileBox();
+		setMissileBox(true);
 	}
 
 	float duration = 0.05f;
@@ -287,10 +287,11 @@ void keyPress(unsigned char key, int x, int y)
 	}
 }
 
-void setMissileBox()
+void setMissileBox(bool sameMass)
 {
 	// Initialize missile box
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, BOXSIZE, 10.0f), (MAXMASS + MINMASS)/2);
+	cyclone::real mass = ( sameMass ? missileBox.getMass() : (MAXMASS + MINMASS)/2);
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, BOXSIZE, 10.0f), mass);
 	// Reset launch time
 	launchTime = 0;
 }
@@ -298,7 +299,7 @@ void setMissileBox()
 void initialize()
 {
 	// Initialize missile box
-	setMissileBox();
+	setMissileBox(false);
 	
 	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
@@ -319,7 +320,7 @@ void initialize()
 void reset()
 {
 	// Reset missile box
-	setMissileBox();
+	setMissileBox(true);
 	
 	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
