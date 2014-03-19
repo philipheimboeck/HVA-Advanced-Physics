@@ -1,5 +1,7 @@
 #include "Box.h"
 #include <gl/glut.h>
+#include <string>
+
 
 Box::Box(void)
 {
@@ -34,12 +36,29 @@ void Box::render(void)
     glMultMatrixf(mat);
     glScalef(halfSize.x*2, halfSize.y*2, halfSize.z*2);
     glutSolidCube(1.0f);
+
+	// Write mass
+	glColor3f(1, 1, 1);
+	glRasterPos3f(0, 0, -.9);
+	std::string text = std::to_string((long long)body->getMass()); 
+	for ( size_t i = 0; i < text.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, text.at(i));
+	}
+
     glPopMatrix();
+
+	
 }
 
 void Box::setMass(const cyclone::real massFactor)
 {
+	this->massFactor = massFactor;
 	body->setMass(halfSize.x * halfSize.y * halfSize.z * massFactor);
+}
+
+cyclone::real Box::getMass()
+{
+	return massFactor;
 }
 
 void Box::setPosition(const cyclone::real x, const cyclone::real y, const cyclone::real z)

@@ -7,6 +7,7 @@ class Box : public cyclone::CollisionBox
 {
 private:
 	void init(cyclone::Vector3 halfSize);
+	cyclone::real massFactor;
 
 public:
 	Box(void);
@@ -18,6 +19,7 @@ public:
 	void render();
 
 	void setMass(const cyclone::real massFactor);
+	cyclone::real getMass();
 	void setPosition(const cyclone::real x, const cyclone::real y, const cyclone::real z);
 	void setPosition(const cyclone::Vector3 &position);
 	void setRotation(const cyclone::real x, const cyclone::real y, const cyclone::real z);
