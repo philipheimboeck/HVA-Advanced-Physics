@@ -24,12 +24,16 @@
 #define NUMBEROFBOXES 5
 #define BOXSIZE 3
 #define MAXCONTACTS 256
+#define MINMASS 1
+#define MAXMASS 100
+
 
 void display();
 void update();
 void keyPress(unsigned char key, int x, int y);
 void initialize();
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass);
+void reset();
 void launchBox(void);
 
 Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
@@ -135,9 +139,20 @@ void display() {
 			boxes[i][j].render();
 		}
 	}
+
+	// Write mass
+	glColor3f(0, 0, 0);
+	glRasterPos2f(0, 0);
+	std::string text = "Missile Box Mass: " + std::to_string((long long)missileBox.body->getMass()); 
+	for ( size_t i = 0; i < text.length(); i++ ) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
+	}
+
 	glDisable(GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
+
+	
 
 	// Update the displayed content.
 	glFlush();
@@ -182,7 +197,6 @@ void update()
 			cyclone::CollisionDetector::boxAndHalfSpace(*box, plane, &cData);
 		}
 	}
-
 	
 	// Resolve detected contacts
     resolver.resolveContacts(
@@ -204,9 +218,20 @@ void keyPress(unsigned char key, int x, int y)
 		std::cout<<"Reset"<<std::endl;
 		initialize();
 		break;
+	case 'n': case 'N':
+		// New
+		std::cout<<"Reset"<<std::endl;
+		reset();
+		break;
 	case ' ':
 		// Launch box
 		launchBox();
+		break;
+	case '+':
+		missileBox.setMass(min(missileBox.getMass() + 1, MAXMASS));
+		break;
+	case '-':
+		missileBox.setMass(max(missileBox.getMass() - 1, MINMASS));
 		break;
 	default:
 		std::cout<<(int)key<<std::endl;
@@ -219,7 +244,7 @@ void initialize()
 	std::srand(time(NULL));
 
 	// Initialize missile box
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), rand() % 100 + 1);
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), (MAXMASS + MINMASS)/2);
 	
 	// Initialize wall
 	for ( int i = 0; i < NUMBEROFBOXES; i++ )
@@ -229,7 +254,27 @@ void initialize()
 			cyclone::Vector3 position(i * 2 * BOXSIZE + 10, 
 				j * 2 * BOXSIZE + 10, 50.0f);
 
-			initializeBox(&boxes[i][j], position, rand() % 100 + 1);
+			initializeBox(&boxes[i][j], position, rand() % MAXMASS + MINMASS);
+		}
+	}
+
+	cData.contactArray = contacts;
+}
+
+void reset()
+{
+	// Reset missile box
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, 0, 10.0f), missileBox.getMass());
+	
+	// Initialize wall
+	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	{
+		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
+		{
+			cyclone::Vector3 position(i * 2 * BOXSIZE + 10, 
+				j * 2 * BOXSIZE + 10, 50.0f);
+
+			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
 	}
 
