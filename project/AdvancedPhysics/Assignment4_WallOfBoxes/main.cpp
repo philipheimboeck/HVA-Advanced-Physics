@@ -18,6 +18,7 @@
 #include "glutBasic.h"
 #include "Box.h"
 
+// Define Wall of Boxes Settings
 #define WIDTH	1028
 #define HEIGHT	640
 #define NUMBEROFBOXES_WIDTH 4
@@ -37,15 +38,17 @@ void reset();
 void launchBox(void);
 void setMissileBox(bool sameMass);
 
+// Create Boxes arrays
 Box boxes[NUMBEROFBOXES_WIDTH][NUMBEROFBOXES_HEIGHT];
 Box *boxPointers[NUMBEROFBOXES_WIDTH*NUMBEROFBOXES_HEIGHT];
 Box missileBox;
 
+// Create the Contact Resolve and contacts array
 cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
 
-cyclone::Vector3 velocity;
+cyclone::Vector3 velocity; // Velocity used by the missile box
 
 time_t launchTime; // Used for reseting the missile after an short period of time
 
@@ -110,7 +113,7 @@ void display() {
 	glLoadIdentity();
 	gluLookAt(NUMBEROFBOXES_WIDTH*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES_HEIGHT*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
 
-	// Floor
+	// Print the Floor
 	glColor3f(0.7, 0.8, 0.8);
 	glBegin(GL_QUADS);
 	glVertex3f(0,0,0); glTexCoord2f(0,0); glNormal3f(0,1,0);
@@ -119,7 +122,7 @@ void display() {
     glVertex3f(0,0,300); glTexCoord2f(0.0,1.0); glNormal3f(0,1,0);
 	glEnd();
 
-	// Print all axes
+	// Print all axes - X
 	glColor3f(0,0,0);
 	glRasterPos3f(2, 0, 0);
 	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'X');
@@ -128,6 +131,7 @@ void display() {
 	glVertex3f(1000, 0, 0);
 	glEnd();
 
+	// Axis Y
 	glRasterPos3f(0, 2, 0);
 	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Y');
 	glBegin(GL_LINES);
@@ -135,6 +139,7 @@ void display() {
 	glVertex3f(0, 1000, 0);
 	glEnd();
 
+	// Axis Z
 	glRasterPos3f(0, 0, 2);
 	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Z');
 	glBegin(GL_LINES);
@@ -142,7 +147,7 @@ void display() {
 	glVertex3f(0, 0, 1000);
 	glEnd();
 
-	// Print velocity
+	// Print velocity line to get an idea in which direction the box will be launched
 	cyclone::Vector3 pos1 = missileBox.body->getPosition();
 	cyclone::Vector3 pos2 = missileBox.body->getPosition() + velocity;
 	glBegin(GL_LINES);
@@ -166,7 +171,7 @@ void display() {
 		}
 	}
 
-	// Write controls
+	// Write control info
 	glColor3f(0, 0, 0);
 	drawHudText("[+-] Increase or decrease mass (" + 
 		std::to_string((long long)(missileBox.body->getMass())) + " g)", WIDTH, HEIGHT, 10, 20);
@@ -193,6 +198,7 @@ void update()
 
 	float duration = 0.05f;
 
+	// Integrate and calculate internal contacts of boxes
 	missileBox.integrate(duration);
 	missileBox.calculateInternals();
 	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
@@ -206,18 +212,18 @@ void update()
 
 
 	/** GENERATE Contacts **/
-	// Create the ground plane data
+	// Create the floor plane contact
     cyclone::CollisionPlane plane;
     plane.direction = cyclone::Vector3(0,1,0);
     plane.offset = 0;
 
-	// Set up the collision data structure
+	// Setting the collision data
     cData.reset(MAXCONTACTS);
     cData.friction = (cyclone::real)0.9;
     cData.restitution = (cyclone::real)0.1;
     cData.tolerance = (cyclone::real)0.1;
 
-	// Check ground plane collisions
+	// Check the each Box to Floor collision
 	cyclone::CollisionDetector::boxAndHalfSpace(missileBox, plane, &cData);
 	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
@@ -244,18 +250,21 @@ void update()
 		}
 	}
 
-	
 	// Resolve detected contacts
     resolver.resolveContacts(
         cData.contactArray,
         cData.contactCount,
         duration
-        );
+    );
 
 	// Set a flag, so that the display function will be called again
 	glutPostRedisplay();
 }
 
+/**
+ * KeyPress Method
+ * Interact to the user input 
+ */
 void keyPress(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -275,21 +284,27 @@ void keyPress(unsigned char key, int x, int y)
 		launchBox();
 		break;
 	case '+':
+		// Increase Mass of missile box
 		missileBox.setMass(min(missileBox.getMass() + 1, MAXMASS));
 		break;
 	case '-':
+		// Decrease Mass of missile box
 		missileBox.setMass(max(missileBox.getMass() - 1, MINMASS));
 		break;
 	case 'w':
+		// Increase upward velocity
 		velocity.y++;
 		break;
 	case 's':
+		// Increase downward velocity
 		velocity.y--;
 		break;
 	case 'a':
+		// Move velocity to the left
 		velocity.x++;
 		break;
 	case 'd':
+		// Move velocity to the right
 		velocity.x--;
 		break;
 	default:
@@ -297,6 +312,9 @@ void keyPress(unsigned char key, int x, int y)
 	}
 }
 
+/*
+ * Initialize the Missile Box
+ */
 void setMissileBox(bool sameMass)
 {
 	// Initialize missile box
@@ -307,6 +325,9 @@ void setMissileBox(bool sameMass)
 	launchTime = 0;
 }
 
+/*
+ * Initialize the wall of boxes
+ */
 void initialize()
 {
 	// Initialize missile box
@@ -320,6 +341,7 @@ void initialize()
 	{
 		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
+			// Create each box with randomized mass and stacked position
 			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
 				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
 
@@ -328,9 +350,13 @@ void initialize()
 		}
 	}
 
+	// Set the contact array to store our box/floor contacts
 	cData.contactArray = contacts;
 }
 
+/*
+ * Reset the world to start values
+ */
 void reset()
 {
 	// Reset missile box
@@ -341,20 +367,23 @@ void reset()
 	{
 		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
+			// Create each box with randomized mass and stacked position
 			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
 				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
 
 			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
 	}
-
-	//cData.contactArray = contacts;
 }
 
+/*
+ * Initialize a new Box with given position and mass
+ */
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 {
 	box->halfSize = cyclone::Vector3(BOXSIZE, BOXSIZE, BOXSIZE);
 	
+	// Set Position, Orientation and Damping (Linear and Angular) Factor
 	box->setPosition(position);
 	box->setDamping(0.95f, 0.8f);
 	box->setOrientation(1, 0, 0, 0);
@@ -366,12 +395,16 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
     box->body->clearAccumulators();
     box->body->setAcceleration(0,-.5f,0);
 
+	// Awake box
 	box->body->setCanSleep(false);
 	box->body->setAwake();
 
 	box->recalculate();
 }
 
+/*
+ * Launch Box toward the wall of boxes
+ */
 void launchBox(void)
 {
 	// Don't launch missile box a second time
@@ -384,6 +417,9 @@ void launchBox(void)
 	}
 }
 
+/*
+ * Check if given string is a number
+ */
 bool is_number(const std::string& s)
 {
 	return !s.empty() && std::find_if(s.begin(), 
