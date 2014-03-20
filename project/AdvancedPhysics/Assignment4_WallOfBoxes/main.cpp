@@ -25,16 +25,23 @@
 #define BOXSIZE 3
 #define MAXCONTACTS 256
 #define MINMASS 1
-#define MAXMASS 8
+#define MAXMASS 10
 
-
+// Callback function that draws everything on the screen
 void display();
+// Callback function for physic calculations
 void update();
+// Callback function that will handle the inputs
 void keyPress(unsigned char key, int x, int y);
+// Initializing the boxes (will also be called by Pressing N for New)
 void initialize();
+// Initialize the values for one box
 void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass);
+// Reset the simulation with the same masses
 void reset();
+// Launch the missile box
 void launchBox(void);
+// Reset the missile box, if sameMass is true the mass will not be reseted
 void setMissileBox(bool sameMass);
 
 Box boxes[NUMBEROFBOXES_WIDTH][NUMBEROFBOXES_HEIGHT];
@@ -185,6 +192,14 @@ void display() {
 
 void update()
 {
+	// Pause everything until the missile is launched
+	// to prevent the wall from collapsing
+	if ( launchTime == 0 ) 
+	{
+		glutPostRedisplay();
+		return;
+	}
+
 	// Reset missile?
 	if ( launchTime != 0 && time(NULL) - launchTime > 3 )
 	{
@@ -209,7 +224,7 @@ void update()
 	// Create the ground plane data
     cyclone::CollisionPlane plane;
     plane.direction = cyclone::Vector3(0,1,0);
-    plane.offset = 0;
+    plane.offset = -3.1f;
 
 	// Set up the collision data structure
     cData.reset(MAXCONTACTS);
@@ -302,7 +317,7 @@ void setMissileBox(bool sameMass)
 	// Initialize missile box
 	missileBox.setColor(cyclone::Vector3(1, 0, 0));
 	cyclone::real mass = ( sameMass ? missileBox.getMass() : (MAXMASS + MINMASS)/2);
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES_WIDTH/2*BOXSIZE, BOXSIZE, 10.0f), mass);
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES_WIDTH/2*BOXSIZE, 0, 10.0f), mass);
 	// Reset launch time
 	launchTime = 0;
 }
@@ -321,7 +336,7 @@ void initialize()
 		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
 			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
-				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
+				j * 2 * (BOXSIZE + 0.02f), 50.0f);
 
 			initializeBox(&boxes[i][j], position, rand() % (MAXMASS-MINMASS)+1 + MINMASS);
 			boxPointers[(i*NUMBEROFBOXES_HEIGHT+j)] = &(boxes[i][j]);
@@ -342,7 +357,7 @@ void reset()
 		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
 			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
-				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
+				j * 2 * (BOXSIZE + 0.02f), 50.0f);
 
 			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
