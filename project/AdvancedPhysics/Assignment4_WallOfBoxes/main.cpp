@@ -20,11 +20,12 @@
 
 #define WIDTH	1028
 #define HEIGHT	640
-#define NUMBEROFBOXES 5
+#define NUMBEROFBOXES_WIDTH 4
+#define NUMBEROFBOXES_HEIGHT 4
 #define BOXSIZE 3
 #define MAXCONTACTS 256
-#define MINMASS 50
-#define MAXMASS 80
+#define MINMASS 1
+#define MAXMASS 8
 
 
 void display();
@@ -36,15 +37,15 @@ void reset();
 void launchBox(void);
 void setMissileBox(bool sameMass);
 
-Box boxes[NUMBEROFBOXES][NUMBEROFBOXES];
-Box *boxPointers[NUMBEROFBOXES*NUMBEROFBOXES];
+Box boxes[NUMBEROFBOXES_WIDTH][NUMBEROFBOXES_HEIGHT];
+Box *boxPointers[NUMBEROFBOXES_WIDTH*NUMBEROFBOXES_HEIGHT];
 Box missileBox;
 
 cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
 
-cyclone::Vector3 velocity = cyclone::Vector3(0.0f, 5.0f, 40.0f);
+cyclone::Vector3 velocity;
 
 time_t launchTime; // Used for reseting the missile after an short period of time
 
@@ -107,7 +108,7 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	gluLookAt(NUMBEROFBOXES*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
+	gluLookAt(NUMBEROFBOXES_WIDTH*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES_HEIGHT*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
 
 	// Floor
 	glColor3f(0.7, 0.8, 0.8);
@@ -157,21 +158,21 @@ void display() {
 	glEnable(GL_COLOR_MATERIAL);
 	glColor3f(1,0,0);
 	missileBox.render();
-	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
-		for ( int j = 0; j < NUMBEROFBOXES; j++ )
+		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ )
 		{
 			boxes[i][j].render();
 		}
 	}
 
-	// Write mass
+	// Write controls
 	glColor3f(0, 0, 0);
-	glRasterPos2f(0, 0);
-	std::string text = "Missile Box Mass: " + std::to_string((long long)missileBox.body->getMass()); 
-	for ( size_t i = 0; i < text.length(); i++ ) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text.at(i));
-	}
+	drawHudText("[+-] Increase or decrease mass (" + 
+		std::to_string((long long)(missileBox.body->getMass())) + " g)", WIDTH, HEIGHT, 10, 20);
+	drawHudText("[WASD] Aim", WIDTH, HEIGHT, 10, 40);
+	drawHudText("[R] Reset", WIDTH, HEIGHT, 10, 60);
+	drawHudText("[N] New Map", WIDTH, HEIGHT, 10, 80);
 
 	glDisable(GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
@@ -194,14 +195,15 @@ void update()
 
 	missileBox.integrate(duration);
 	missileBox.calculateInternals();
-	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
-		for ( int j = 0; j < NUMBEROFBOXES; j++ )
+		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ )
 		{
 			boxes[i][j].integrate(duration);
 			boxes[i][j].calculateInternals();
 		}
 	}
+
 
 	/** GENERATE Contacts **/
 	// Create the ground plane data
@@ -217,9 +219,9 @@ void update()
 
 	// Check ground plane collisions
 	cyclone::CollisionDetector::boxAndHalfSpace(missileBox, plane, &cData);
-	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
-		for ( int j = 0; j < NUMBEROFBOXES; j++ )
+		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ )
 		{
 			if (!cData.hasMoreContacts()) return;
 			Box *box = &boxes[i][j];
@@ -228,9 +230,9 @@ void update()
 	}
 	
 	// Check each box-to-box collision
-	for ( int i=0; i < NUMBEROFBOXES*NUMBEROFBOXES; i++ )
+	for ( int i=0; i < NUMBEROFBOXES_WIDTH*NUMBEROFBOXES_HEIGHT - 1; i++ ) 
 	{
-		for ( int j=i+1; j < NUMBEROFBOXES*NUMBEROFBOXES; j++ ) 
+		for ( int j=i+1; j < NUMBEROFBOXES_WIDTH*NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
 			if (!cData.hasMoreContacts()) return;
 			Box *box = boxPointers[i];
@@ -242,6 +244,7 @@ void update()
 		}
 	}
 
+	
 	// Resolve detected contacts
     resolver.resolveContacts(
         cData.contactArray,
@@ -297,8 +300,9 @@ void keyPress(unsigned char key, int x, int y)
 void setMissileBox(bool sameMass)
 {
 	// Initialize missile box
+	missileBox.setColor(cyclone::Vector3(1, 0, 0));
 	cyclone::real mass = ( sameMass ? missileBox.getMass() : (MAXMASS + MINMASS)/2);
-	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES/2*BOXSIZE, BOXSIZE, 10.0f), mass);
+	initializeBox(&missileBox, cyclone::Vector3(NUMBEROFBOXES_WIDTH/2*BOXSIZE, BOXSIZE, 10.0f), mass);
 	// Reset launch time
 	launchTime = 0;
 }
@@ -307,17 +311,20 @@ void initialize()
 {
 	// Initialize missile box
 	setMissileBox(false);
+
+	// Initialize velocity vector
+	velocity = cyclone::Vector3(0.0f, 5.0f, 40.0f);
 	
 	// Initialize wall
-	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
-		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
+		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE + 2, 
-				j * 2 * BOXSIZE + 2, 50.0f);
+			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
+				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
 
 			initializeBox(&boxes[i][j], position, rand() % (MAXMASS-MINMASS)+1 + MINMASS);
-			boxPointers[(i*NUMBEROFBOXES+j)] = &(boxes[i][j]);
+			boxPointers[(i*NUMBEROFBOXES_HEIGHT+j)] = &(boxes[i][j]);
 		}
 	}
 
@@ -330,12 +337,12 @@ void reset()
 	setMissileBox(true);
 	
 	// Initialize wall
-	for ( int i = 0; i < NUMBEROFBOXES; i++ )
+	for ( int i = 0; i < NUMBEROFBOXES_WIDTH; i++ )
 	{
-		for ( int j = 0; j < NUMBEROFBOXES; j++ ) 
+		for ( int j = 0; j < NUMBEROFBOXES_HEIGHT; j++ ) 
 		{
-			cyclone::Vector3 position(i * 2 * BOXSIZE + 2, 
-				j * 2 * BOXSIZE + 2, 50.0f);
+			cyclone::Vector3 position(i * 2 * (BOXSIZE + 0.2f), 
+				j * 2 * (BOXSIZE + 0.2f) + 3.f, 50.0f);
 
 			initializeBox(&boxes[i][j], position, boxes[i][j].getMass());
 		}
@@ -357,7 +364,7 @@ void initializeBox(Box* box, cyclone::Vector3 position, cyclone::real mass)
 	box->calculateInertia();
 
     box->body->clearAccumulators();
-    box->body->setAcceleration(0,-1.0f,0);
+    box->body->setAcceleration(0,-.5f,0);
 
 	box->body->setCanSleep(false);
 	box->body->setAwake();

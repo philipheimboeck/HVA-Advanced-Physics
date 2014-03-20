@@ -8,6 +8,7 @@ class Box : public cyclone::CollisionBox
 private:
 	void init(cyclone::Vector3 halfSize);
 	cyclone::real massFactor;
+	cyclone::Vector3 color;
 
 public:
 	Box(void);
@@ -27,6 +28,8 @@ public:
 	void setDamping(const cyclone::real linearDamping, const cyclone::real angularDamping);
 	void setOrientation(const cyclone::real r, const cyclone::real i, const cyclone::real j, const cyclone::real k);
 	void setOrientation(const cyclone::Quaternion &orientation);
+
+	void setColor(cyclone::Vector3 color);
 
 	void calculateInertia();
 	void recalculate();

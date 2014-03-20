@@ -18,6 +18,7 @@ void Box::init(cyclone::Vector3 halfSize)
 	body = new cyclone::RigidBody;
 	body->setAcceleration(cyclone::Vector3::GRAVITY);
 	this->halfSize = halfSize;
+	this->color = cyclone::Vector3(1, 1, 1);
 }
 
 
@@ -29,6 +30,7 @@ Box::~Box(void)
 void Box::render(void) 
 {
 	// Get the OpenGL transformation
+	glColor3f(color.x, color.y, color.z);
     GLfloat mat[16];
     body->getGLTransform(mat);
 
@@ -122,4 +124,9 @@ void Box::integrate(cyclone::real duration)
 {
 	body->integrate(duration);
 	calculateInternals();
+}
+
+void Box::setColor(cyclone::Vector3 color)
+{
+	this->color = color;
 }
