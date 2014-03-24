@@ -14,10 +14,12 @@
     <ClCompile Include="Dice.cpp" />
     <ClCompile Include="glutBasic.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="squadric.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dice.h" />
     <ClInclude Include="glutBasic.h" />
+    <ClInclude Include="squadric.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}</ProjectGuid>

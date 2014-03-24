@@ -171,12 +171,11 @@ void update()
 	//cyclone::CollisionDetector::sphereAndHalfSpace(dices[0], plane, &cData);
 	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
 	{
-		dices[i]->createContacts(&cData);
-		dices[i]->createContactsPlane(plane, &cData);
+		dices[i]->createContactsPlane(&plane, &cData);
 
 		for ( int j = i; j < NUMBEROFDICES; j++)
 		{
-			dices[i]->createContactsDice(*dices[j], &cData);
+			dices[i]->createContactsDice(dices[j], &cData);
 		}
 	}
 
@@ -217,7 +216,7 @@ void initialize()
 {
 	dices[0] = new Dice(2, 0, 0, 0);
 	dices[1] = new Dice(2, 15, 15, 15);
-	dices[2] = new Dice(2, 15, 17, 18);
+	dices[2] = new Dice(2, 15, 30, 18);
 
 	// Set the contact array to store our box/floor contacts
 	cData.contactArray = contacts;

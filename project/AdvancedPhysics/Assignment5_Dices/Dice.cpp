@@ -1,50 +1,24 @@
 #include "Dice.h"
 #include <gl/glut.h>
+#include "squadric.h"
 
 Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z)
 {
-	for ( int i = 0; i < 8; i++ )
-	{
-		vertices[i].body = new cyclone::RigidBody();
-		vertices[i].body->setMass(0.5f);
-		vertices[i].body->setDamping(1.0, 1.0);
-		vertices[i].body->clearAccumulators();
-		vertices[i].body->setAcceleration(cyclone::Vector3::GRAVITY);
-		vertices[i].body->setCanSleep(true);
-		vertices[i].body->setAwake(true);
-		vertices[i].body->calculateDerivedData();
-		vertices[i].radius = halfsize/4;
-	}
+	box.halfSize = cyclone::Vector3(halfsize, halfsize, halfsize);
+	box.body = new cyclone::RigidBody();
+	box.body->setMass(0.5f);
+	box.body->setDamping(1.0, 1.0);
+	box.body->clearAccumulators();
+	box.body->setAcceleration(cyclone::Vector3::GRAVITY);
+	box.body->setCanSleep(true);
+	box.body->setAwake(true);
+	box.body->calculateDerivedData();
+		
+	sphere.body = new cyclone::RigidBody();
+	sphere.radius = halfsize * 0.75;
 	
-	resetPosition(halfsize, x, y, z);
-
-	// Join the vertices
-	joints[0].set(vertices[0].body, cyclone::Vector3(-halfsize, 0, 0), 
-		vertices[1].body, cyclone::Vector3(halfsize, 0, 0), 0.15f);
-	joints[1].set(vertices[1].body, cyclone::Vector3(0, -halfsize, 0), 
-		vertices[2].body, cyclone::Vector3(0, halfsize, 0), 0.15f);
-	joints[2].set(vertices[2].body, cyclone::Vector3(halfsize, 0, 0), 
-		vertices[3].body, cyclone::Vector3(-halfsize, 0, 0), 0.15f);
-	joints[3].set(vertices[3].body, cyclone::Vector3(0, halfsize, 0), 
-		vertices[0].body, cyclone::Vector3(0, -halfsize, 0), 0.15f);
-
-	joints[4].set(vertices[4].body, cyclone::Vector3(-halfsize, 0, 0), 
-		vertices[5].body, cyclone::Vector3(halfsize, 0, 0), 0.15f);
-	joints[5].set(vertices[5].body, cyclone::Vector3(0, -halfsize, 0), 
-		vertices[6].body, cyclone::Vector3(0, halfsize, 0), 0.15f);
-	joints[6].set(vertices[6].body, cyclone::Vector3(halfsize, 0, 0), 
-		vertices[7].body, cyclone::Vector3(-halfsize, 0, 0), 0.15f);
-	joints[7].set(vertices[7].body, cyclone::Vector3(0, halfsize, 0), 
-		vertices[4].body, cyclone::Vector3(0, -halfsize, 0), 0.15f);
-
-	joints[8].set(vertices[0].body, cyclone::Vector3(0, 0, -halfsize), 
-		vertices[4].body, cyclone::Vector3(0, 0, halfsize), 0.15f);
-	joints[9].set(vertices[1].body, cyclone::Vector3(0, 0, -halfsize), 
-		vertices[5].body, cyclone::Vector3(0, 0, halfsize), 0.15f);
-	joints[10].set(vertices[2].body, cyclone::Vector3(0, 0, -halfsize), 
-		vertices[6].body, cyclone::Vector3(0, 0, halfsize), 0.15f);
-	joints[11].set(vertices[3].body, cyclone::Vector3(0, 0, -halfsize), 
-		vertices[7].body, cyclone::Vector3(0, 0, halfsize), 0.15f);
+	box.body->setPosition(x, y, z);
+	sphere.body->setPosition(x, y, z);
 }
 
 Dice::~Dice(void)
@@ -52,25 +26,11 @@ Dice::~Dice(void)
 }
 
 void Dice::recalculate() {
-	for ( int i = 0; i < 8; i++ )
-	{
-		// Calculate the Transform Matrix
-		vertices[0].body->calculateDerivedData();
+	// Calculate the Transform Matrix
+	box.body->calculateDerivedData();
 
-		// Calculate internal contact data
-		vertices[0].calculateInternals();
-	}
-}
-
-void Dice::resetPosition(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z) {
-	vertices[0].body->setPosition(x - halfsize, y - halfsize, z - halfsize);
-	vertices[1].body->setPosition(x + halfsize, y - halfsize, z - halfsize);
-	vertices[2].body->setPosition(x + halfsize, y + halfsize, z - halfsize);
-	vertices[3].body->setPosition(x - halfsize, y + halfsize, z - halfsize);
-	vertices[4].body->setPosition(x - halfsize, y - halfsize, z + halfsize);
-	vertices[5].body->setPosition(x + halfsize, y - halfsize, z + halfsize);
-	vertices[6].body->setPosition(x + halfsize, y + halfsize, z + halfsize);
-	vertices[7].body->setPosition(x - halfsize, y + halfsize, z + halfsize);
+	// Calculate internal contact data
+	box.calculateInternals();
 }
 
 void Dice::render()
@@ -78,119 +38,44 @@ void Dice::render()
 	// Get the OpenGL transformation
 	glColor3f(0, 0, 1);
     GLfloat mat[16];
-    
-	for ( int i = 0; i < 8; i++ )
-	{
-		vertices[i].body->getGLTransform(mat);
-		glPushMatrix();
-		glMultMatrixf(mat);
-		glScalef(vertices[i].radius*2, vertices[i].radius*2, vertices[i].radius*2);
-		glutWireSphere(vertices[i].radius, 20, 20);
-		glPopMatrix();
-	}
+    box.body->getGLTransform( mat );
 
-	// Paint all sides of the cube
+    glPushMatrix();
+        glMultMatrixf( mat );
 
-	glBegin(GL_LINES);
-	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[0].body->getPosition().z);
-	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
-	glEnd();
+        glPushMatrix();
+            glScalef( box.halfSize.x, box.halfSize.y, box.halfSize.z );
+            sqSolidRoundCube( sphere.radius, 30, 30 );
 
-	glBegin(GL_LINES);
-	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
-	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
-	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
-	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[0].body->getPosition().z);
-	glEnd();
-
-	// Next area
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[4].body->getPosition().z);
-	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
-	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
-	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
-	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[4].body->getPosition().z);
-	glEnd();
-
-	// Last 4 sides
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[4].body->getPosition().z);
-	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[0].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
-	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
-	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
-	glEnd();
-
-	glBegin(GL_LINES);
-	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
-	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
-	glEnd();
-
-
+			glutWireSphere(sphere.radius, 30, 20);
+        glPopMatrix();
+    glPopMatrix();
 }
 
 void Dice::integrate(cyclone::real duration)
 {
-	for ( int i = 0; i < 8; i++ )
-	{
-		vertices[i].body->integrate(duration);
-		vertices[i].calculateInternals();
-	}
+	box.body->integrate(duration);
+	box.calculateInternals();
+
+	// Update the sphere position
+    sphere.body->setPosition( box.body->getPosition() );
 }
 
-void Dice::createContacts(cyclone::CollisionData *data)
+void Dice::createContactsDice(Dice *dice, cyclone::CollisionData *data)
 {
-	for ( int i = 0; i < 12; i++ )
-	{
-		if (!data->hasMoreContacts()) return;
-        unsigned added = joints[i].addContact(data->contacts, data->contactsLeft);
-        data->addContacts(added);
-	}
+	// If the boxes and spheres of both dices are colliding, the dices are colliding
+	if( cyclone::IntersectionTests::boxAndBox( this->box, dice->box ) &&
+		cyclone::IntersectionTests::sphereAndSphere( this->sphere, dice->sphere ) )
+    {
+		cyclone::CollisionDetector::boxAndBox( box, dice->box, data );
+    }
 }
 
-void Dice::createContactsDice(Dice &dice, cyclone::CollisionData *data)
+void Dice::createContactsPlane(cyclone::CollisionPlane *plane, cyclone::CollisionData *data) 
 {
-	for ( int i = 0; i < 12; i++ )
-	{
-		for ( int j = 0; j < 12; j++ )
-		{
-			cyclone::CollisionDetector::sphereAndSphere(this->vertices[i], dice.vertices[j], data);
-		}
-	}
-}
-
-void Dice::createContactsPlane(cyclone::CollisionPlane &plane, cyclone::CollisionData *data) {
-	for ( int i = 0; i < 8; i++ )
-	{
-		cyclone::CollisionDetector::sphereAndHalfSpace(vertices[i], plane, data);
-	}
+	// If box and sphere are colliding, then the dice collides
+	if( cyclone::IntersectionTests::boxAndHalfSpace( box, *plane ) && cyclone::IntersectionTests::sphereAndHalfSpace( sphere, *plane ) )
+    {
+        cyclone::CollisionDetector::boxAndHalfSpace( box, *plane, data );
+    }
 }
