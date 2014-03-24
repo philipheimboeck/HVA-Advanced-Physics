@@ -104,6 +104,15 @@ void display() {
 	glLoadIdentity();
 	gluLookAt( -25.0, 8.0, 5.0, 20.0, 5.0, 0.0, 0.0, 1.0, 0.0 );
 
+	// Print the Floor
+	glColor3f(0.7, 0.8, 0.8);
+	glBegin(GL_QUADS);
+	glVertex3f(0,0,0); glTexCoord2f(0,0); glNormal3f(0,1,0);
+    glVertex3f(300,0,0); glTexCoord2f(1,0); glNormal3f(0,1,0);
+    glVertex3f(300,0,300); glTexCoord2f(1.0,1.0); glNormal3f(0,1,0);
+    glVertex3f(0,0,300); glTexCoord2f(0.0,1.0); glNormal3f(0,1,0);
+	glEnd();
+
 	// Print all axes - X
 	glColor3f(0,0,0);
 	glRasterPos3f(2, 0, 0);
@@ -147,6 +156,31 @@ void update()
 		dices[i]->integrate(duration);
 	}
 
+	// Create the floor plane contact
+    cyclone::CollisionPlane plane;
+    plane.direction = cyclone::Vector3(0,1,0);
+    plane.offset = -3.1f;
+
+	// Setting the collision data
+    cData.reset(MAXCONTACTS);
+    cData.friction = (cyclone::real)0.9;
+    cData.restitution = (cyclone::real)0.1;
+    cData.tolerance = (cyclone::real)0.1;
+
+	// Check the each Box to Floor collision
+	//cyclone::CollisionDetector::sphereAndHalfSpace(dices[0], plane, &cData);
+	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
+	{
+		dices[i]->createContacts(plane, &cData);
+	}
+
+	// Resolve detected contacts
+    resolver.resolveContacts(
+        cData.contactArray,
+        cData.contactCount,
+        duration
+    );
+
 	// Set a flag, so that the display function will be called again
 	glutPostRedisplay();
 }
@@ -159,6 +193,12 @@ void keyPress(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
+	case 'r': case 'R':
+		// Reset
+		std::cout<<"Reset"<<std::endl;
+		reset();
+		break;
+
 	default:
 		std::cout<<(int)key<<std::endl;
 	}
@@ -172,6 +212,9 @@ void initialize()
 	dices[0] = new Dice(1, 0, 0, 0);
 	dices[1] = new Dice(1, 15, 15, 15);
 	dices[2] = new Dice(1, 10, 10, 10);
+
+	// Set the contact array to store our box/floor contacts
+	cData.contactArray = contacts;
 }
 
 /*
@@ -179,4 +222,9 @@ void initialize()
  */
 void reset()
 {
+	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
+	{
+		dices[i]->resetPosition(5, 0, 0, 0);
+		dices[i]->recalculate();
+	}
 }

@@ -10,13 +10,33 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 		vertices[i]->body->setMass(0.5f);
 		vertices[i]->body->setDamping(1.0, 1.0);
 		vertices[i]->body->clearAccumulators();
-		vertices[i]->body->setAcceleration(0, 0, 0);
+		vertices[i]->body->setAcceleration(cyclone::Vector3::GRAVITY);
 		vertices[i]->body->setCanSleep(true);
 		vertices[i]->body->setAwake(true);
 		vertices[i]->body->calculateDerivedData();
 		vertices[i]->radius = halfsize/4;
 	}
 	
+	resetPosition(halfsize, x, y, z);
+}
+
+Dice::~Dice(void)
+{
+	delete[] vertices;
+}
+
+void Dice::recalculate() {
+	for ( int i = 0; i < 8; i++ )
+	{
+		// Calculate the Transform Matrix
+		vertices[0]->body->calculateDerivedData();
+
+		// Calculate internal contact data
+		vertices[0]->calculateInternals();
+	}
+}
+
+void Dice::resetPosition(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z) {
 	vertices[0]->body->setPosition(x - halfsize, y - halfsize, z - halfsize);
 	vertices[1]->body->setPosition(x + halfsize, y - halfsize, z - halfsize);
 	vertices[2]->body->setPosition(x + halfsize, y + halfsize, z - halfsize);
@@ -55,12 +75,6 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 		vertices[7]->body, cyclone::Vector3(0, 0, halfsize), 1);
 }
 
-
-Dice::~Dice(void)
-{
-	delete[] vertices;
-}
-
 void Dice::render()
 {
 	// Get the OpenGL transformation
@@ -84,5 +98,12 @@ void Dice::integrate(cyclone::real duration)
 	{
 		vertices[i]->body->integrate(duration);
 		vertices[i]->calculateInternals();
+	}
+}
+
+void Dice::createContacts(cyclone::CollisionPlane &plane, cyclone::CollisionData *data) {
+	for ( int i = 0; i < 8; i++ )
+	{
+		cyclone::CollisionDetector::sphereAndHalfSpace(*vertices[i], plane, data);
 	}
 }
