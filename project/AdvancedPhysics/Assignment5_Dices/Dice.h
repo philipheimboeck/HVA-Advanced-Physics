@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cyclone\collide_fine.h>
+#include <cyclone\joints.h>
 
 class Dice
 {
@@ -11,5 +12,6 @@ public:
 	void render();
 private:
 	cyclone::CollisionSphere* vertices[8];
+	cyclone::Joint joints[12];
 };
 

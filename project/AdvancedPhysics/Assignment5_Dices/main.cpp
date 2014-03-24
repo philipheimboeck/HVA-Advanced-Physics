@@ -23,7 +23,7 @@
 #define WIDTH	1028
 #define HEIGHT	640
 #define MAXCONTACTS 256
-#define NUMBEROFDICES 1
+#define NUMBEROFDICES 3
 
 // Callback function that draws everything on the screen
 void display();
@@ -169,9 +169,9 @@ void keyPress(unsigned char key, int x, int y)
  */
 void initialize()
 {
-	dices[0] = new Dice(5, 0, 0, 0);
-	//dices[1] = new Dice(10, 15, 15, 15);
-	//dices[2] = new Dice(5, 10, 10, 10);
+	dices[0] = new Dice(1, 0, 0, 0);
+	dices[1] = new Dice(1, 15, 15, 15);
+	dices[2] = new Dice(1, 10, 10, 10);
 }
 
 /*
