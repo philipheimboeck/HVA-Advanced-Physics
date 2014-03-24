@@ -10,11 +10,13 @@ public:
 	~Dice(void);
 	void integrate(cyclone::real duration);
 	void render();
-	void createContacts(cyclone::CollisionPlane &plane, cyclone::CollisionData *data);
+	void createContacts(cyclone::CollisionData *data);
+	void createContactsPlane(cyclone::CollisionPlane &plane, cyclone::CollisionData *data);
 	void resetPosition(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z);
 	void recalculate();
 private:
-	cyclone::CollisionSphere* vertices[8];
+
+	cyclone::CollisionSphere vertices[8];
 	cyclone::Joint joints[12];
 };
 
