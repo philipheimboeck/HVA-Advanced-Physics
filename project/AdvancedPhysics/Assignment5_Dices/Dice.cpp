@@ -88,6 +88,74 @@ void Dice::render()
 		glutWireSphere(vertices[i].radius, 20, 20);
 		glPopMatrix();
 	}
+
+	// Paint all sides of the cube
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[0].body->getPosition().z);
+	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
+	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
+	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
+	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[0].body->getPosition().z);
+	glEnd();
+
+	// Next area
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[4].body->getPosition().z);
+	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
+	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
+	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
+	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[4].body->getPosition().z);
+	glEnd();
+
+	// Last 4 sides
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[0].body->getPosition().x, vertices[0].body->getPosition().y, vertices[4].body->getPosition().z);
+	glVertex3f(vertices[4].body->getPosition().x, vertices[4].body->getPosition().y, vertices[0].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[1].body->getPosition().x, vertices[1].body->getPosition().y, vertices[1].body->getPosition().z);
+	glVertex3f(vertices[5].body->getPosition().x, vertices[5].body->getPosition().y, vertices[5].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[2].body->getPosition().x, vertices[2].body->getPosition().y, vertices[2].body->getPosition().z);
+	glVertex3f(vertices[6].body->getPosition().x, vertices[6].body->getPosition().y, vertices[6].body->getPosition().z);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(vertices[3].body->getPosition().x, vertices[3].body->getPosition().y, vertices[3].body->getPosition().z);
+	glVertex3f(vertices[7].body->getPosition().x, vertices[7].body->getPosition().y, vertices[7].body->getPosition().z);
+	glEnd();
+
+
 }
 
 void Dice::integrate(cyclone::real duration)
@@ -106,6 +174,17 @@ void Dice::createContacts(cyclone::CollisionData *data)
 		if (!data->hasMoreContacts()) return;
         unsigned added = joints[i].addContact(data->contacts, data->contactsLeft);
         data->addContacts(added);
+	}
+}
+
+void Dice::createContactsDice(Dice &dice, cyclone::CollisionData *data)
+{
+	for ( int i = 0; i < 12; i++ )
+	{
+		for ( int j = 0; j < 12; j++ )
+		{
+			cyclone::CollisionDetector::sphereAndSphere(this->vertices[i], dice.vertices[j], data);
+		}
 	}
 }
 

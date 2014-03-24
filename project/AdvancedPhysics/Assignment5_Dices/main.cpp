@@ -22,7 +22,7 @@
 // Define Wall of Boxes Settings
 #define WIDTH	1028
 #define HEIGHT	640
-#define MAXCONTACTS 256
+#define MAXCONTACTS 1024
 #define NUMBEROFDICES 3
 
 // Callback function that draws everything on the screen
@@ -102,7 +102,7 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	gluLookAt( -25.0, 8.0, 5.0, 20.0, 5.0, 0.0, 0.0, 1.0, 0.0 );
+	gluLookAt( -30.0, 15.0, -5.0, 0.0, 15.0, 0.0, 0.0, 10.0, 0.0 );
 
 	// Print the Floor
 	glColor3f(0.7, 0.8, 0.8);
@@ -159,7 +159,7 @@ void update()
 	// Create the floor plane contact
     cyclone::CollisionPlane plane;
     plane.direction = cyclone::Vector3(0,1,0);
-    plane.offset = -3.1f;
+    plane.offset = 0;
 
 	// Setting the collision data
     cData.reset(MAXCONTACTS);
@@ -173,6 +173,11 @@ void update()
 	{
 		dices[i]->createContacts(&cData);
 		dices[i]->createContactsPlane(plane, &cData);
+
+		for ( int j = i; j < NUMBEROFDICES; j++)
+		{
+			dices[i]->createContactsDice(*dices[j], &cData);
+		}
 	}
 
 	// Resolve detected contacts
@@ -212,7 +217,7 @@ void initialize()
 {
 	dices[0] = new Dice(2, 0, 0, 0);
 	dices[1] = new Dice(2, 15, 15, 15);
-	dices[2] = new Dice(2, 10, 10, 10);
+	dices[2] = new Dice(2, 15, 17, 18);
 
 	// Set the contact array to store our box/floor contacts
 	cData.contactArray = contacts;

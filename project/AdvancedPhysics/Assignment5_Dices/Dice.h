@@ -11,6 +11,7 @@ public:
 	void integrate(cyclone::real duration);
 	void render();
 	void createContacts(cyclone::CollisionData *data);
+	void createContactsDice(Dice &dice, cyclone::CollisionData *data);
 	void createContactsPlane(cyclone::CollisionPlane &plane, cyclone::CollisionData *data);
 	void resetPosition(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z);
 	void recalculate();
