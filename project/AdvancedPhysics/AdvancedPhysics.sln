@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Assignment3_Springs", "Assi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Assignment4_WallOfBoxes", "Assignment4_WallOfBoxes\Assignment4_WallOfBoxes.vcxproj", "{856705F7-85B4-48BF-943C-08684A2505EB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Assignment5_Dices", "Assignment5_Dices\Assignment5_Dices.vcxproj", "{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{856705F7-85B4-48BF-943C-08684A2505EB}.Debug|Win32.Build.0 = Debug|Win32
 		{856705F7-85B4-48BF-943C-08684A2505EB}.Release|Win32.ActiveCfg = Release|Win32
 		{856705F7-85B4-48BF-943C-08684A2505EB}.Release|Win32.Build.0 = Release|Win32
+		{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}.Debug|Win32.Build.0 = Debug|Win32
+		{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}.Release|Win32.ActiveCfg = Release|Win32
+		{36B7AE79-4A05-4789-B412-6AF77A8A4DF9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
