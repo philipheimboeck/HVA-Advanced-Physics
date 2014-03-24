@@ -17,11 +17,13 @@
 #include <time.h>
 
 #include "glutBasic.h"
+#include "Dice.h"
 
 // Define Wall of Boxes Settings
 #define WIDTH	1028
 #define HEIGHT	640
 #define MAXCONTACTS 256
+#define NUMBEROFDICES 1
 
 // Callback function that draws everything on the screen
 void display();
@@ -38,6 +40,8 @@ void reset();
 cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
+
+Dice* dices[3];
 
 /*
 * Application entry point
@@ -98,9 +102,37 @@ void display() {
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	//gluLookAt(NUMBEROFBOXES_WIDTH*BOXSIZE + 50, 64, -20,  NUMBEROFBOXES_HEIGHT*BOXSIZE, 5.0, 50.0,  0.0, 1.0, 0.0);
+	gluLookAt( -25.0, 8.0, 5.0, 20.0, 5.0, 0.0, 0.0, 1.0, 0.0 );
 
-	
+	// Print all axes - X
+	glColor3f(0,0,0);
+	glRasterPos3f(2, 0, 0);
+	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'X');
+	glBegin(GL_LINES);
+	glVertex3f(0, 0, 0);
+	glVertex3f(1000, 0, 0);
+	glEnd();
+
+	// Axis Y
+	glRasterPos3f(0, 2, 0);
+	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Y');
+	glBegin(GL_LINES);
+	glVertex3f(0, 0, 0);
+	glVertex3f(0, 1000, 0);
+	glEnd();
+
+	// Axis Z
+	glRasterPos3f(0, 0, 2);
+	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Z');
+	glBegin(GL_LINES);
+	glVertex3f(0, 0, 0);
+	glVertex3f(0, 0, 1000);
+	glEnd();
+
+	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
+	{
+		dices[i]->render();
+	}
 
 	// Update the displayed content.
 	glFlush();
@@ -132,6 +164,9 @@ void keyPress(unsigned char key, int x, int y)
  */
 void initialize()
 {
+	dices[0] = new Dice(5, 0, 0, 0);
+	//dices[1] = new Dice(5, 5, 5, 5);
+	//dices[2] = new Dice(5, 10, 10, 10);
 }
 
 /*
