@@ -7,6 +7,13 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 	{
 		vertices[i] = new cyclone::CollisionSphere();
 		vertices[i]->body = new cyclone::RigidBody();
+		vertices[i]->body->setMass(50.f);
+		vertices[i]->body->setDamping(1.0, 1.0);
+		vertices[i]->body->clearAccumulators();
+		vertices[i]->body->setAcceleration(0,0,0);
+		vertices[i]->body->setCanSleep(true);
+		vertices[i]->body->setAwake(true);
+		vertices[i]->body->calculateDerivedData();
 		vertices[i]->radius = halfsize/8;
 	}
 	
@@ -30,7 +37,7 @@ void Dice::render()
 {
 
 	// Get the OpenGL transformation
-	glColor3f(1, 1, 1);
+	glColor3f(0, 0, 1);
     GLfloat mat[16];
     
 	for ( int i = 0; i < 8; i++ )
@@ -38,8 +45,18 @@ void Dice::render()
 		vertices[i]->body->getGLTransform(mat);
 		glPushMatrix();
 		glMultMatrixf(mat);
+		//glTranslatef (0, 0, 0);
 		glScalef(vertices[i]->radius*2, vertices[i]->radius*2, vertices[i]->radius*2);
-		glutSolidSphere(vertices[i]->radius, vertices[i]->radius*vertices[i]->radius*100, vertices[i]->radius*vertices[i]->radius*100);
+		glutWireSphere(vertices[i]->radius, 20, 20);
 		glPopMatrix();
+	}
+}
+
+void Dice::integrate(cyclone::real duration)
+{
+	for ( int i = 0; i < 8; i++ )
+	{
+		vertices[i]->body->integrate(duration);
+		vertices[i]->calculateInternals();
 	}
 }
