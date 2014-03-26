@@ -7,7 +7,7 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 	box.halfSize = cyclone::Vector3(halfsize, halfsize, halfsize);
 	box.body = new cyclone::RigidBody();
 
-	cyclone::real mass = box.halfSize.x * box.halfSize.y * box.halfSize.z * 1.0f;
+	cyclone::real mass = box.halfSize.x * box.halfSize.y * box.halfSize.z * 2.0f;
 	box.body->setMass(mass);
 
 	cyclone::Matrix3 tensor;
@@ -46,7 +46,6 @@ void Dice::recalculate() {
 void Dice::render()
 {
 	// Get the OpenGL transformation
-	glColor3f(0, 0, 1);
     GLfloat mat[16];
     box.body->getGLTransform( mat );
 
@@ -69,6 +68,7 @@ void Dice::integrate(cyclone::real duration)
 
 	// Update the sphere position
     sphere.body->setPosition( box.body->getPosition() );
+	sphere.body->setOrientation(box.body->getOrientation() );
 }
 
 void Dice::createContactsDice(Dice *dice, cyclone::CollisionData *data)
@@ -89,4 +89,34 @@ void Dice::createContactsPlane(cyclone::CollisionPlane *plane, cyclone::Collisio
     {
         cyclone::CollisionDetector::boxAndHalfSpace( box, *plane, data );
     }
+}
+
+void Dice::setOrientation(cyclone::real r,cyclone::real i, cyclone::real j, cyclone::real k)
+{
+	box.body->setOrientation(r, i, j, k);
+}
+
+void Dice::setOrientation(cyclone::Quaternion &orientation)
+{
+	box.body->setOrientation(orientation);
+}
+
+void Dice::setRotation(cyclone::real x, cyclone::real y, cyclone::real z)
+{
+	box.body->setRotation(x, y, z);
+}
+
+void Dice::setRotation(cyclone::Vector3 &rotation)
+{
+	box.body->setRotation(rotation);
+}
+
+void Dice::setAcceleration(cyclone::real x, cyclone::real y, cyclone::real z)
+{
+	box.body->setAcceleration(x, y, z);
+}
+
+void Dice::setAcceleration(cyclone::Vector3 &rotation)
+{
+	box.body->setAcceleration(rotation);
 }

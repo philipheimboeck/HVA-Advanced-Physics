@@ -41,7 +41,7 @@ cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
 
-Dice* dices[3];
+Dice* dices[NUMBEROFDICES];
 
 /*
 * Application entry point
@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
 	// Init glut
 	glutInit(&argc, argv);
 
-	// Init application physics
-	initialize();
-
 	// Initialize random
 	std::srand(time(NULL));
+
+	// Init application physics
+	initialize();
 
 	// Create a window
 	createWindow("Wall of Boxes", WIDTH, HEIGHT);
@@ -138,10 +138,22 @@ void display() {
 	glVertex3f(0, 0, 1000);
 	glEnd();
 
+	// Render dices
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	glColor3f(1, 1, 1);
 	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
 	{
 		dices[i]->render();
 	}
+
+	glDisable(GL_COLOR_MATERIAL);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	
 
 	// Update the displayed content.
 	glFlush();
@@ -214,10 +226,27 @@ void keyPress(unsigned char key, int x, int y)
  */
 void initialize()
 {
-	dices[0] = new Dice(2, 0, 0, 0);
-	dices[1] = new Dice(2, 15, 15, 15);
-	dices[2] = new Dice(2, 15, 30, 14);
+	// Initialize dices with
+	// different positons, accelerations and rotations
+	for ( int i = 0; i < NUMBEROFDICES; i++ ) {
 
+		cyclone::real posx = rand() % 31;		// 0 to 30
+		cyclone::real posy = rand() % 21 + 15;	// 15 to 35
+		cyclone::real posz = rand() % 31;		// 0 to 30
+
+		cyclone::real accelx = rand() % 4;		// 0 to 3
+		cyclone::real accely = cyclone::Vector3::GRAVITY.y; // Always the gravity
+		cyclone::real accelz = rand() % 4;		// 0 to 3
+
+		cyclone::real rotatx = rand() % 7 - 3; // -3 to 3
+		cyclone::real rotaty = rand() % 7 - 3;
+		cyclone::real rotatz = rand() % 7 - 3;
+
+		dices[i] = new Dice(2, posx, posy, posz);
+		dices[i]->setAcceleration(accelx, accely, accelz);
+		dices[i]->setRotation(rotatx, rotaty, rotatz);
+	}
+	
 	// Set the contact array to store our box/floor contacts
 	cData.contactArray = contacts;
 }
