@@ -6,19 +6,29 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 {
 	box.halfSize = cyclone::Vector3(halfsize, halfsize, halfsize);
 	box.body = new cyclone::RigidBody();
-	box.body->setMass(0.5f);
+
+	cyclone::real mass = box.halfSize.x * box.halfSize.y * box.halfSize.z * 1.0f;
+	box.body->setMass(mass);
+
+	cyclone::Matrix3 tensor;
+	tensor.setBlockInertiaTensor( box.halfSize, mass );
+    box.body->setInertiaTensor( tensor );
+
 	box.body->setDamping(1.0, 1.0);
 	box.body->clearAccumulators();
 	box.body->setAcceleration(cyclone::Vector3::GRAVITY);
+
 	box.body->setCanSleep(true);
 	box.body->setAwake(true);
-	box.body->calculateDerivedData();
+	
 		
 	sphere.body = new cyclone::RigidBody();
 	sphere.radius = halfsize * 0.75;
 	
 	box.body->setPosition(x, y, z);
 	sphere.body->setPosition(x, y, z);
+
+	box.body->calculateDerivedData();
 }
 
 Dice::~Dice(void)
@@ -45,9 +55,9 @@ void Dice::render()
 
         glPushMatrix();
             glScalef( box.halfSize.x, box.halfSize.y, box.halfSize.z );
-            sqSolidRoundCube( sphere.radius, 30, 30 );
+			sqSolidRoundCube( box.halfSize.x*2, 30, 30 );
 
-			glutWireSphere(sphere.radius, 30, 20);
+			//glutWireSphere(sphere.radius, 30, 20);
         glPopMatrix();
     glPopMatrix();
 }
@@ -73,8 +83,9 @@ void Dice::createContactsDice(Dice *dice, cyclone::CollisionData *data)
 
 void Dice::createContactsPlane(cyclone::CollisionPlane *plane, cyclone::CollisionData *data) 
 {
-	// If box and sphere are colliding, then the dice collides
-	if( cyclone::IntersectionTests::boxAndHalfSpace( box, *plane ) && cyclone::IntersectionTests::sphereAndHalfSpace( sphere, *plane ) )
+	// If box and sphere collide with the plane, then the dice collides
+	if( cyclone::IntersectionTests::boxAndHalfSpace( box, *plane ) &&
+		cyclone::IntersectionTests::sphereAndHalfSpace( sphere, *plane ) )
     {
         cyclone::CollisionDetector::boxAndHalfSpace( box, *plane, data );
     }

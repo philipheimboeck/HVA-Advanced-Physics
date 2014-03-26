@@ -216,7 +216,7 @@ void initialize()
 {
 	dices[0] = new Dice(2, 0, 0, 0);
 	dices[1] = new Dice(2, 15, 15, 15);
-	dices[2] = new Dice(2, 15, 30, 18);
+	dices[2] = new Dice(2, 15, 30, 14);
 
 	// Set the contact array to store our box/floor contacts
 	cData.contactArray = contacts;
