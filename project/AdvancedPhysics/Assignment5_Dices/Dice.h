@@ -21,6 +21,8 @@ public:
 	void setRotation(cyclone::Vector3 &rotation);
 	void setAcceleration(cyclone::real x, cyclone::real y, cyclone::real z);
 	void setAcceleration(cyclone::Vector3 &rotation);
+
+	bool verbose;
 private:
 	STGA tgaFile;
 	cyclone::CollisionBox box;

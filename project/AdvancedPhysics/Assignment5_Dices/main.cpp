@@ -31,6 +31,10 @@ void display();
 void update();
 // Callback function that will handle the inputs
 void keyPress(unsigned char key, int x, int y);
+// Called when a mouse button is pressed.
+void mouse(int button, int state, int x, int y);
+// Called when the mouse is dragged.
+void motion(int x, int y);
 // Initializing the boxes (will also be called by Pressing N for New)
 void initialize();
 // Reset the simulation with the same masses
@@ -42,6 +46,11 @@ cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
 
 Dice* dices[NUMBEROFDICES];
+
+// Mouse variables
+float theta = 0.0f;
+float phi = 15.0f;
+int last_x, last_y;
 
 /*
 * Application entry point
@@ -83,6 +92,8 @@ int main(int argc, char** argv) {
 	// determines that the window should be refreshed
 	glutIdleFunc(update);		// No event
 	glutKeyboardFunc(keyPress);
+	glutMouseFunc(mouse);		// Mouse Handler
+    glutMotionFunc(motion);		// Mouse Motion handler
 
 	// Run the application
 	// The main loop does the following things:
@@ -103,6 +114,8 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	gluLookAt( -30.0, 15.0, -5.0, 0.0, 15.0, 0.0, 0.0, 10.0, 0.0 );
+	glRotatef(-phi, 0, 0, 1);
+    glRotatef(theta, 0, 1, 0);
 
 	// Print the Floor
 	glColor3f(0.7, 0.8, 0.8);
@@ -112,6 +125,22 @@ void display() {
     glVertex3f(300,0,300); glTexCoord2f(1.0,1.0); glNormal3f(0,1,0);
     glVertex3f(0,0,300); glTexCoord2f(0.0,1.0); glNormal3f(0,1,0);
 	glEnd();
+
+	// Render dices
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	glColor3f(1, 1, 1);
+	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
+	{
+		dices[i]->render();
+	}
+
+	glDisable(GL_COLOR_MATERIAL);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
 
 	// Print all axes - X
 	glColor3f(0,0,0);
@@ -138,22 +167,12 @@ void display() {
 	glVertex3f(0, 0, 1000);
 	glEnd();
 
-	// Render dices
-	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_LIGHTING);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-	glEnable(GL_COLOR_MATERIAL);
-	glColor3f(1, 1, 1);
-	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
-	{
-		dices[i]->render();
-	}
-
-	glDisable(GL_COLOR_MATERIAL);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
 	
+
+	glColor3f(0, 0, 0);
+	drawHudText("Press 'R' to reset", WIDTH, HEIGHT, 10, 20);
+	drawHudText("Press 'V' for verbose mode", WIDTH, HEIGHT, 10, 40);
 
 	// Update the displayed content.
 	glFlush();
@@ -212,10 +231,15 @@ void keyPress(unsigned char key, int x, int y)
 	{
 	case 'r': case 'R':
 		// Reset
-		std::cout<<"Reset"<<std::endl;
 		reset();
 		break;
-
+	case 'v': case 'V':
+		// Verbose: Display also the spheres of the dices
+		for ( int i = 0; i < NUMBEROFDICES; i++ )
+		{
+			dices[i]->verbose = !dices[i]->verbose;
+		}
+		break;
 	default:
 		std::cout<<(int)key<<std::endl;
 	}
@@ -261,4 +285,26 @@ void reset()
 		delete dices[i];
 	}
 	initialize();
+}
+
+void mouse(int button, int state, int x, int y)
+{
+    // Set the position
+    last_x = x;
+    last_y = y;
+}
+
+void motion(int x, int y)
+{
+    // Update the camera
+    theta += (x - last_x)*0.25f;
+    phi += (y - last_y)*0.25f;
+
+    // Keep it in bounds
+    if (phi < -20.0f) phi = -20.0f;
+    else if (phi > 80.0f) phi = 80.0f;
+
+    // Remember the position
+    last_x = x;
+    last_y = y;
 }

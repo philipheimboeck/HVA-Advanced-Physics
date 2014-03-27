@@ -32,6 +32,8 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 	sphere.body->setPosition(x, y, z);
 
 	box.body->calculateDerivedData();
+// Don't display spheres
+	verbose = false;
 
 	// Load Texture
 	loadTGA ("D:\\dices.bmp",this->tgaFile);
@@ -65,7 +67,7 @@ void Dice::render()
             glScalef( box.halfSize.x, box.halfSize.y, box.halfSize.z );
 			glColor3f(1,0,0);
 			sqSolidRoundCube( box.halfSize.x*2, 30, 30 );
-			//glutWireSphere(sphere.radius, 30, 20);
+			if ( verbose ) glutWireSphere(sphere.radius, 30, 20);
 
 			glutSolidCube( box.halfSize.x );
 
