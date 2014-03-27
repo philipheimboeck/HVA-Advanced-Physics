@@ -1,6 +1,9 @@
 #include "Dice.h"
 #include <gl/glut.h>
 #include "squadric.h"
+#include "tga.h"
+
+GLuint texture[1];
 
 Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::real z)
 {
@@ -29,6 +32,12 @@ Dice::Dice(cyclone::real halfsize, cyclone::real x, cyclone::real y, cyclone::re
 	sphere.body->setPosition(x, y, z);
 
 	box.body->calculateDerivedData();
+
+	// Load Texture
+	loadTGA ("D:\\dices.bmp",this->tgaFile);
+	glGenTextures(1, &texture[0]);
+	glBindTexture (GL_TEXTURE_2D, texture[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tgaFile.width, tgaFile.height, 0, GL_RGB, GL_UNSIGNED_BYTE, tgaFile.data);
 }
 
 Dice::~Dice(void)
@@ -54,11 +63,104 @@ void Dice::render()
 
         glPushMatrix();
             glScalef( box.halfSize.x, box.halfSize.y, box.halfSize.z );
+			glColor3f(1,0,0);
 			sqSolidRoundCube( box.halfSize.x*2, 30, 30 );
-
 			//glutWireSphere(sphere.radius, 30, 20);
+
+			glutSolidCube( box.halfSize.x );
+
         glPopMatrix();
     glPopMatrix();
+}
+
+static void
+drawBox(GLfloat size, GLenum type)
+{
+  static GLfloat n[6][3] =
+  {
+    {-1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {1.0, 0.0, 0.0},
+    {0.0, -1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {0.0, 0.0, -1.0}
+  };
+  static GLint faces[6][4] =
+  {
+    {0, 1, 2, 3},
+    {3, 2, 6, 7},
+    {7, 6, 5, 4},
+    {4, 5, 1, 0},
+    {5, 6, 2, 1},
+    {7, 4, 0, 3}
+  };
+  GLfloat v[8][3];
+  GLint i;
+
+  v[0][0] = v[1][0] = v[2][0] = v[3][0] = -size / 2;
+  v[4][0] = v[5][0] = v[6][0] = v[7][0] = size / 2;
+  v[0][1] = v[1][1] = v[4][1] = v[5][1] = -size / 2;
+  v[2][1] = v[3][1] = v[6][1] = v[7][1] = size / 2;
+  v[0][2] = v[3][2] = v[4][2] = v[7][2] = -size / 2;
+  v[1][2] = v[2][2] = v[5][2] = v[6][2] = size / 2;
+
+  //glColor3f(1,0,0);
+  glEnable (GL_TEXTURE_2D); /* enable texture mapping */
+  glBindTexture (GL_TEXTURE_2D, texture[0]);
+
+  /*for (i = 5; i >= 0; i--) {
+    glBegin(type);
+	//glColor3f(i/5.f, i/5.f, i/5.f);
+	
+    glNormal3fv(&n[i][0]);
+    glVertex3fv(&v[faces[i][0]][0]);
+    glVertex3fv(&v[faces[i][1]][0]);
+    glVertex3fv(&v[faces[i][2]][0]);
+    glVertex3fv(&v[faces[i][3]][0]);
+
+    glEnd();
+  }*/
+
+  glBegin(GL_QUADS);
+  // Front Face
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,1.0f);// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,1.0f);// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,1.0f,1.0f);// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,1.0f,1.0f);// Top Left Of The Texture and Quad
+	// Back Face
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,1.0f, -1.0f);// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,1.0f, -1.0f);// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);// Bottom Left Of The Texture and Quad
+	// Top Face
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,1.0f, -1.0f);// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,1.0f,1.0f);// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,1.0f,1.0f);// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,1.0f, -1.0f);// Top Right Of The Texture and Quad
+	// Bottom Face
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,1.0f);// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,1.0f);// Bottom Right Of The Texture and Quad
+	// Right face
+	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,1.0f, -1.0f);// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,1.0f,1.0f);// Top Left Of The Texture and Quad
+	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,1.0f);// Bottom Left Of The Texture and Quad
+	// Left Face
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);// Bottom Left Of The Texture and Quad
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,1.0f);// Bottom Right Of The Texture and Quad
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,1.0f,1.0f);// Top Right Of The Texture and Quad
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,1.0f, -1.0f);// Top Left Of The Texture and Quad
+	glEnd();
+
+   glDisable (GL_TEXTURE_2D);
+}
+
+void APIENTRY
+glutSolidCube(GLdouble size)
+{
+  drawBox(size, GL_QUADS);
 }
 
 void Dice::integrate(cyclone::real duration)

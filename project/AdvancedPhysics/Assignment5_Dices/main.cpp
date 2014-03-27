@@ -23,7 +23,7 @@
 #define WIDTH	1028
 #define HEIGHT	640
 #define MAXCONTACTS 1024
-#define NUMBEROFDICES 3
+#define NUMBEROFDICES 1
 
 // Callback function that draws everything on the screen
 void display();
@@ -140,7 +140,7 @@ void display() {
 
 	// Render dices
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHTING);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 	glEnable(GL_COLOR_MATERIAL);

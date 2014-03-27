@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cyclone\collide_fine.h>
+#include "tga.h"
 
 
 class Dice
@@ -21,7 +22,7 @@ public:
 	void setAcceleration(cyclone::real x, cyclone::real y, cyclone::real z);
 	void setAcceleration(cyclone::Vector3 &rotation);
 private:
-
+	STGA tgaFile;
 	cyclone::CollisionBox box;
 	cyclone::CollisionSphere sphere;
 };
