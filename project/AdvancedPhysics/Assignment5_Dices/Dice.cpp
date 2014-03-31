@@ -60,7 +60,7 @@ void Dice::render()
             glScalef( box.halfSize.x, box.halfSize.y, box.halfSize.z );
 			
 			glColor3f( 1.0, 1.0, 1.0 );
-			// Draw the rounded cube
+			// Draw the rounded cube (with squadric.h; squadric.cpp)
 			sqSolidRoundCube( box.halfSize.x*2, 30, 30 );
 			if ( verbose ) glutWireSphere(sphere.radius, 30, 20);
 
