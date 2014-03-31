@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cyclone\collide_fine.h>
-#include "tga.h"
-
 
 class Dice
 {
@@ -24,7 +22,6 @@ public:
 
 	bool verbose;
 private:
-	STGA tgaFile;
 	cyclone::CollisionBox box;
 	cyclone::CollisionSphere sphere;
 };

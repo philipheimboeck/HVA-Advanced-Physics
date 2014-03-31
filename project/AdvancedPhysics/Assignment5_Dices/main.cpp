@@ -23,7 +23,7 @@
 #define WIDTH	1028
 #define HEIGHT	640
 #define MAXCONTACTS 1024
-#define NUMBEROFDICES 1
+#define NUMBEROFDICES 3
 
 // Callback function that draws everything on the screen
 void display();
@@ -108,7 +108,6 @@ int main(int argc, char** argv) {
 }
 
 void display() {
-	const static GLfloat lightPosition[] = {-1,1,0,0};
 
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -127,20 +126,10 @@ void display() {
 	glEnd();
 
 	// Render dices
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-	glEnable(GL_COLOR_MATERIAL);
-	glColor3f(1, 1, 1);
 	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
 	{
 		dices[i]->render();
 	}
-
-	glDisable(GL_COLOR_MATERIAL);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
 
 	// Print all axes - X
 	glColor3f(0,0,0);
@@ -166,9 +155,6 @@ void display() {
 	glVertex3f(0, 0, 0);
 	glVertex3f(0, 0, 1000);
 	glEnd();
-
-	//glEnable(GL_LIGHTING);
-	
 
 	glColor3f(0, 0, 0);
 	drawHudText("Press 'R' to reset", WIDTH, HEIGHT, 10, 20);
