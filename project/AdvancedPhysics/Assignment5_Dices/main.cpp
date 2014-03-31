@@ -1,7 +1,6 @@
 /*
 * Assignment 5 - Dices
 * by Mathis Florian (StdNo: 500702331) and Heimböck Philip (StdNo: 500702328)
-*
 */
 
 #include <cyclone\core.h>
@@ -19,7 +18,7 @@
 #include "glutBasic.h"
 #include "Dice.h"
 
-// Define Wall of Boxes Settings
+// Define Window Settings
 #define WIDTH	1028
 #define HEIGHT	640
 #define MAXCONTACTS 1024
@@ -45,9 +44,10 @@ cyclone::ContactResolver resolver = cyclone::ContactResolver(MAXCONTACTS * 8);
 cyclone::Contact contacts[MAXCONTACTS];
 cyclone::CollisionData cData;
 
+// Create Dice Objects
 Dice* dices[NUMBEROFDICES];
 
-// Mouse variables
+// Mouse variables for camera movement
 float theta = 0.0f;
 float phi = 15.0f;
 int last_x, last_y;
@@ -68,9 +68,9 @@ int main(int argc, char** argv) {
 	initialize();
 
 	// Create a window
-	createWindow("Wall of Boxes", WIDTH, HEIGHT);
+	createWindow("Dices", WIDTH, HEIGHT);
 
-	// Initialize graphics
+	// Initialize graphics and set ambient lightning
 	GLfloat lightAmbient[] = {0.8f,0.8f,0.8f,1.0f};
 	GLfloat lightDiffuse[] = {0.9f,0.95f,1.0f,1.0f};
 
@@ -107,8 +107,10 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+/**
+ * Display - Render Floor, Axes and Dices
+ */
 void display() {
-
 	// Clear the scene
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -156,6 +158,7 @@ void display() {
 	glVertex3f(0, 0, 1000);
 	glEnd();
 
+	// Print Info for app usage
 	glColor3f(0, 0, 0);
 	drawHudText("Press 'R' to reset", WIDTH, HEIGHT, 10, 20);
 	drawHudText("Press 'V' for verbose mode", WIDTH, HEIGHT, 10, 40);
@@ -165,8 +168,12 @@ void display() {
 	glutSwapBuffers();
 }
 
+/**
+ * Update Physic
+ */
 void update()
 {
+	// integrate each dice in physic world
 	float duration = 0.05f;
 	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
 	{
@@ -184,12 +191,13 @@ void update()
     cData.restitution = (cyclone::real)0.1;
     cData.tolerance = (cyclone::real)0.1;
 
-	// Check the each Box to Floor collision
-	//cyclone::CollisionDetector::sphereAndHalfSpace(dices[0], plane, &cData);
+	// Check Collision for each Dice
 	for ( int i = 0; i < NUMBEROFDICES; i++ ) 
 	{
+		// Create Contact for Dice to Plane
 		dices[i]->createContactsPlane(&plane, &cData);
 
+		// Create Contact for Dice to Dice
 		for ( int j = i; j < NUMBEROFDICES; j++)
 		{
 			dices[i]->createContactsDice(dices[j], &cData);
@@ -232,7 +240,7 @@ void keyPress(unsigned char key, int x, int y)
 }
 
 /*
- * Initialize the wall of boxes
+ * Initialize the Dices
  */
 void initialize()
 {
@@ -262,7 +270,7 @@ void initialize()
 }
 
 /*
- * Reset the world to start values
+ * Reset the world to start values and delete dice objects
  */
 void reset()
 {
@@ -273,6 +281,10 @@ void reset()
 	initialize();
 }
 
+/**
+ * Mouse
+ * Save last mouse position for camera motion
+ */
 void mouse(int button, int state, int x, int y)
 {
     // Set the position
@@ -280,6 +292,10 @@ void mouse(int button, int state, int x, int y)
     last_y = y;
 }
 
+/**
+ * Motion
+ * Update camera position based on mouse motion
+ */
 void motion(int x, int y)
 {
     // Update the camera
